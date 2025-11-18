@@ -32,7 +32,7 @@ from transformers import (
 from datasets import load_dataset
 from teachers import Teacher
 from data import ImgSentDataset, get_transform
-from model_modified import MCSE, BertForCL, ClipVisnModelAlignment, RobertaForCL, ResNetVisnModel, ClipVisnModel
+from model_modified import DALR, BertForCL, ClipVisnModelAlignment, RobertaForCL, ResNetVisnModel, ClipVisnModel
 from utils import evaluate, inf_train_gen
 from vit import VisionTransformer
 
@@ -381,13 +381,13 @@ def main():
     if args.second_teacher_model_name_or_path is None:
         teacher_pooler = ("cls_before_pooler" if ("simcse" in args.first_teacher_model_name_or_path or "DiffCSE" in args.first_teacher_model_name_or_path) else "avg")
         teacher_text = Teacher(model_name_or_path=args.first_teacher_model_name_or_path, pooler=teacher_pooler)
-        model = MCSE(lang_model, visn_model, teacher_model_first=teacher_text, teacher_model_second=None, args=args)
+        model = DALR(lang_model, visn_model, teacher_model_first=teacher_text, teacher_model_second=None, args=args)
     else:
         first_pooler = ("cls_before_pooler" if ("simcse" in args.first_teacher_model_name_or_path or "DiffCSE" in args.first_teacher_model_name_or_path) else "avg")
         first_teacher_text = Teacher(model_name_or_path=args.first_teacher_model_name_or_path, pooler=first_pooler)
         second_pooler = ("cls_before_pooler" if ("simcse" in args.second_teacher_model_name_or_path or "DiffCSE" in args.second_teacher_model_name_or_path) else "avg")
         second_teacher_text = Teacher(model_name_or_path=args.second_teacher_model_name_or_path, pooler=second_pooler)
-        model = MCSE(lang_model, visn_model, teacher_model_first=first_teacher_text, teacher_model_second=second_teacher_text, args=args)
+        model = DALR(lang_model, visn_model, teacher_model_first=first_teacher_text, teacher_model_second=second_teacher_text, args=args)
 
   
     # Define collator function
@@ -405,8 +405,6 @@ def main():
             padding="max_length" if args.pad_to_max_length else 'longest',
             return_tensors='pt'
         )
-        # if 'image' in keys:
-        #     new_batch['image'] = torch.stack([batch[i]['image'] for i in range(total)])
 
         if 'img' in keys:
             new_batch['img'] = torch.stack([batch[i]['img'] for i in range(total)])
