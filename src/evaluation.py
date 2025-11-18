@@ -194,19 +194,6 @@ def main():
         scores = []
         aligns = []
         uniforms = []
-        # for task in ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']:
-        #     task_names.append(task)
-        #     if task in results:
-        #         if task in ['STS12', 'STS13', 'STS14', 'STS15', 'STS16']:
-        #             scores.append("%.2f" % (results[task]['all']['spearman']['all'] * 100))
-        #             aligns.append("%.3f" % (results[task]['all']['align_loss']['all']))
-        #             uniforms.append("%.3f" % (results[task]['all']['uniform_loss']['all']))
-        #         else:
-        #             scores.append("%.2f" % (results[task]['test']['spearman'].correlation * 100))  # for STSB and SICK.
-        #             aligns.append("%.3f" % (results[task]['test']['align_loss']))
-        #             uniforms.append("%.3f" % (results[task]['test']['uniform_loss']))
-        #     else:
-        #         scores.append("0.00")
         
         for task in ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']:
             task_names.append(task)

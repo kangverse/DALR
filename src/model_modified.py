@@ -497,7 +497,7 @@ def prepare_data(image, label):
     return matched_image, unmatched_image
 
 
-class MCSE(nn.Module):
+class DALR(nn.Module):
     def __init__(self, lang_model, visn_model, teacher_model_first, teacher_model_second: None, args):
         super().__init__()
         self.args = args
