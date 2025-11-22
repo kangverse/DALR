@@ -159,17 +159,12 @@ class VisionTransformer(nn.Module):
 
     def forward(self, x, register_blk=-1):
         B = x.shape[0]
-        # 它将输入图像 x 转换为 patch 的嵌入表示。假设输入 x 的形状为 [B, C, H, W]，patch_embed 会将其转换为 [B, num_patches, embed_dim]。
-        # 这里 num_patches 是图像划分后的 patch 数量，embed_dim 是嵌入的维度。
+
         x = self.patch_embed(x)
 
-        # cls_token 是一个学习的参数，形状为 [1, 1, embed_dim]，通过 expand 方法扩展为 [B, 1, embed_dim]。
-        # 然后将其与 x 连接在一起，所以 x 的形状变为 [B, num_patches + 1, embed_dim]
         cls_tokens = self.cls_token.expand(B, -1, -1)  # stole cls_tokens impl from Phil Wang, thanks
         x = torch.cat((cls_tokens, x), dim=1)
   
-        # 位置嵌入 (pos_embed) 添加到 x 上。pos_embed 的形状为 [1, num_patches + 1, embed_dim]，其中 num_patches + 1 包括了 class token 的位置。
-        # pos_drop 是一个 dropout 层，用于防止过拟合
         x = x + self.pos_embed[:,:x.size(1),:]
         x = self.pos_drop(x)
 
