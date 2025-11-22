@@ -1,10 +1,10 @@
 
+# DALR
+
 ## Overview
 
 We propose **DALR** (**D**ual-level **A**lignment **L**earning for multimodal sentence **R**epresentation Learning). 
-To achieve cross-modal fine-grained alignment, we propose a cross-modal alignment method to mitigate the *cross-modal misalignment bias* (CMB) issue.
-To alleviate the *intra-modal semantic divergence* (ISD) issue, we integrate ranking distillation with global alignment learning to effectively align intra-modal representations.
-The following figure is an illustration of our models.
+To achieve cross-modal fine-grained alignment, we propose a cross-modal alignment method to mitigate the *cross-modal misalignment bias* (CMB) issue. To alleviate the *intra-modal semantic divergence* (ISD) issue, we integrate ranking distillation with global alignment learning to effectively align intra-modal representations. The following figure is an illustration of our models.
 
 ![](figure/model.png)
 
