@@ -65,16 +65,15 @@ class ArcSimilarity(nn.Module):
         self,
         x: torch.Tensor,
         y: torch.Tensor,
-        slabels: torch.Tensor = None,  # 保留参数以兼容原调用
+        slabels: torch.Tensor = None, 
     ) -> torch.Tensor:
         """
         x: [B, 1, D] or [B, D]
         y: [1, B, D] or [B, D]
         return: margin-adjusted cosine / temp
         """
-        cos_sim = self.cos(x, y).clamp(-1.0 + 1e-7, 1.0 - 1e-7)  # 数值稳定
+        cos_sim = self.cos(x, y).clamp(-1.0 + 1e-7, 1.0 - 1e-7) 
         theta = torch.acos(cos_sim)
-        # 这里统一对所有 pair 减去一个 margin（ArcFace 经典形式）
         theta_m = theta - self.margin
         cos_m = torch.cos(theta_m)
         return cos_m / self.temp
@@ -162,9 +161,7 @@ class ImageGrounding(nn.Module):
 
 
 class TextGrounding(nn.Module):
-    """
-    单独的文本 -> grounding 空间投影模块。
-    """
+
 
     def __init__(self, feature_dim: int, proj_dim: int):
         super().__init__()
@@ -177,9 +174,6 @@ class TextGrounding(nn.Module):
 
 
 class ImageGroundingAlignment(nn.Module):
-    """
-    带 BatchNorm 的图像对齐模块。
-    """
 
     def __init__(self, shared_dim: int = 768, sim_dim: int = 256):
         super().__init__()
@@ -199,9 +193,6 @@ class ImageGroundingAlignment(nn.Module):
 
 
 class TextGroundingAlignment(nn.Module):
-    """
-    带 BatchNorm 的文本对齐模块。
-    """
 
     def __init__(self, shared_dim: int = 768, sim_dim: int = 256):
         super().__init__()
@@ -219,10 +210,6 @@ class TextGroundingAlignment(nn.Module):
         text_feat = text_feat / text_feat.norm(2, dim=-1, keepdim=True)
         return text_feat
 
-
-# =========================
-#  KL / Ranking / Divergence Losses
-# =========================
 
 
 class KLContrastiveSimLoss(nn.Module):
@@ -289,7 +276,6 @@ class ListMLE(nn.Module):
         student_top1_sim_pred: torch.Tensor,
         k: int = None,
     ) -> torch.Tensor:
-        # (可选) 子集采样
         if k is not None:
             sublist_indices = (
                 student_top1_sim_pred.shape[1] * torch.rand(size=(k,))
@@ -300,12 +286,11 @@ class ListMLE(nn.Module):
             y_pred = student_top1_sim_pred
             y_true = teacher_top1_sim_pred
 
-        # 打乱以随机处理 tie
+
         random_indices = torch.randperm(y_pred.shape[-1])
         y_pred_shuffled = y_pred[:, random_indices]
         y_true_shuffled = y_true[:, random_indices]
 
-        # 根据 teacher 排序
         y_true_sorted, indices = y_true_shuffled.sort(
             descending=True, dim=-1
         )
@@ -468,9 +453,6 @@ class RobertaForCL(RobertaPreTrainedModel):
 
 
 class ResNetVisnModel(nn.Module):
-    """
-    简单视觉投影头：视觉特征 -> grounding 空间。
-    """
 
     def __init__(self, feature_dim: int, proj_dim: int):
         super().__init__()
@@ -483,9 +465,6 @@ class ResNetVisnModel(nn.Module):
 
 
 class ClipVisnModel(nn.Module):
-    """
-    CLIP 风格的双塔视觉-文本对齐模型。
-    """
 
     def __init__(self, feature_dim: int, proj_dim: int):
         super().__init__()
@@ -519,9 +498,6 @@ class ClipVisnModel(nn.Module):
 
 
 class ClipVisnModelAlignment(nn.Module):
-    """
-    利用已有 grounding 模块进行对齐的 Clip 变体。
-    """
 
     def __init__(self, feature_dim: int, proj_dim: int):
         super().__init__()
@@ -549,7 +525,7 @@ class ClipVisnModelAlignment(nn.Module):
         text_grounding: nn.Module,
         image_grounding: nn.Module,
     ):
-        # 注意：这里直接接收外部的 grounding 模块
+  
         self.vmlp = text_grounding
         self.tmlp = image_grounding
 
@@ -562,17 +538,8 @@ class ClipVisnModelAlignment(nn.Module):
         return visn_feat, text_feat, None
 
 
-# =========================
-#  Utils for DALR
-# =========================
-
-
 def prepare_data(image: torch.Tensor, label: torch.Tensor):
-    """
-    拆出一组 matched / unmatched 图像：
-    - matched_image: 原始顺序
-    - unmatched_image: roll 之后的顺序
-    """
+
     # 确保是 1D 索引
     if isinstance(label, torch.Tensor):
         label_cpu = label.detach().cpu().tolist()
@@ -598,7 +565,7 @@ def prepare_data(image: torch.Tensor, label: torch.Tensor):
 class DALR(nn.Module):
     """
     - lang_model: BERT / RoBERTa encoder (BertForCL / RobertaForCL)
-    - visn_model: 视觉 encoder (如 ClipVisnModel)
+    - visn_model: encoder (如 ClipVisnModel)
     - teacher_model_first / second: teacher encoders for distillation
     """
 
@@ -761,7 +728,7 @@ class DALR(nn.Module):
                 batch["token_type_ids"]
                 if "token_type_ids" in batch
                 else None
-            ),  # ✅ 修正原来的 key 判断
+            ), 
             position_ids=(
                 batch["position_ids"]
                 if "position_ids" in batch
@@ -895,7 +862,7 @@ class DALR(nn.Module):
                 ) / self.args.tau2
                 teacher_text_features = z1T
             else:
-                # 两个 teacher 融合
+            
                 embeddings1, embeddings1_local = self.teacher_model_first.encode(
                     teacher_inputs, device=self.args.device
                 )
@@ -1037,7 +1004,7 @@ class DALR(nn.Module):
             z2.unsqueeze(1), z1.unsqueeze(0)
         )
 
-        # 视觉特征
+        
         v, _, _ = self.visn_model(
             batch["img"], batch["clip_text_feat"]
         )
