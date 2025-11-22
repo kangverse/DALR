@@ -232,7 +232,7 @@ def parse_args():
         help="score_base.",
     )
    
-    # 相关维度设置
+
     parser.add_argument(
         "--hidden_size",
         type=int,
