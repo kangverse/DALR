@@ -39,7 +39,8 @@ bash download_dataset.sh
 
 You can download the model (SimCSE, DiffCSE, etc) from huggingface and put it in the `Model` folder
 
-## Use Our model
+
+## Use DALR
 ``` python
 import torch
 from scipy.spatial.distance import cosine
@@ -106,7 +107,6 @@ bash scripts/run_wiki_flickr.sh
 
 bash scripts/run_wiki_coco.sh
 ```
-
 
 ## Acknowledgements
 
