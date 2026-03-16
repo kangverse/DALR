@@ -3,9 +3,7 @@ import logging
 import math
 import os
 from functools import partial
-import pickle
 from torch import nn
-import datasets
 from torch.utils.data.dataloader import DataLoader
 import torch
 from tqdm.auto import tqdm
@@ -426,8 +424,6 @@ def main():
             cv_labels = torch.where(torch.logical_and(cv_scores>args.score_base,~torch.eye(cv_scores.size(0),dtype=bool)),
             1,
             0) * -99999.99
-            print(vc_scores)
-            
             new_batch['vc_slabels'] = vc_labels
             new_batch['cv_slabels'] = cv_labels
             

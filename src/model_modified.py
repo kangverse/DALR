@@ -766,6 +766,6 @@ class DALR(nn.Module):
 
             intra_modal_alignment_loss = self.KLContrastiveSimLoss(z1_z2_cos, logits_per_text, 0.45, 0.5, use_loss="kl")
 
-            intra_mdal_loss = intra_modal_alignment_loss + rank_loss 
+            intra_modal_loss = intra_modal_alignment_loss + rank_loss
 
-            return loss, cross_modal_loss, intra_mdal_loss
+            return loss, cross_modal_loss, intra_modal_loss

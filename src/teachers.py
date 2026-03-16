@@ -1,4 +1,8 @@
-from tool import *
+import torch
+from numpy import ndarray
+from torch import Tensor
+from typing import Union
+from tool import SimCSE
 
 class Teacher(SimCSE):
     """
