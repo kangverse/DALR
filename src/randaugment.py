@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 
 
-## aug functions
 def identity_func(img):
     return img
 
