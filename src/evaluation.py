@@ -14,22 +14,22 @@ sys.path.insert(0, PATH_TO_SENTEVAL)
 import senteval
 
 
-def print_full_table(task_names, scores, aligns, uniforms, logging):
+def print_full_table(task_names, scores, aligns, uniforms, logger):
     tb = PrettyTable()
     tb.field_names = task_names
     tb.add_row(scores)
     tb.add_row(aligns)
     tb.add_row(uniforms)
     print(tb)
-    logging.info(tb)
+    logger.info(tb)
 
 
-def print_table(task_names, scores, logging):
+def print_table(task_names, scores, logger):
     tb = PrettyTable()
     tb.field_names = task_names
     tb.add_row(scores)
     print(tb)
-    logging.info(tb)
+    logger.info(tb)
 
 
 def main():

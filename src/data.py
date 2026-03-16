@@ -1,31 +1,37 @@
-import torch
-from torch.utils.data import Dataset
-import h5py
-import numpy as np
-# from torchvision.datasets.folder import default_loader
-import json
-from tqdm import tqdm
-from torchvision import transforms
-from PIL import Image
-from randaugment import RandomAugment
 import os
+import json
+import torch
+import numpy as np
+from torch.utils.data import Dataset
+from torchvision import transforms
 from torchvision.transforms import InterpolationMode
+from PIL import Image
+from tqdm import tqdm
+from randaugment import RandomAugment
+
+
+# CLIP image normalization constants (mean and std over ImageNet)
+_CLIP_MEAN = (0.48145466, 0.4578275, 0.40821073)
+_CLIP_STD = (0.26862954, 0.26130258, 0.27577711)
+
 
 def get_transform(args):
-    normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
-           
-    train_transform = transforms.Compose([      
-            
-            transforms.RandomResizedCrop(args.image_res,scale=(0.5, 1.0), interpolation=InterpolationMode.BICUBIC),
-            transforms.RandomHorizontalFlip(),
-            RandomAugment(2,7,isPIL=True,augs=['Identity','AutoContrast','Equalize','Brightness','Sharpness',
-                                            'ShearX', 'ShearY', 'TranslateX', 'TranslateY', 'Rotate']),     
-            transforms.ToTensor(),
-            normalize,
-        ]) 
-    
-   
-    return  train_transform
+    """Build the training image transform pipeline."""
+    normalize = transforms.Normalize(_CLIP_MEAN, _CLIP_STD)
+    train_transform = transforms.Compose([
+        transforms.RandomResizedCrop(
+            args.image_res, scale=(0.5, 1.0), interpolation=InterpolationMode.BICUBIC
+        ),
+        transforms.RandomHorizontalFlip(),
+        RandomAugment(
+            2, 7, isPIL=True,
+            augs=['Identity', 'AutoContrast', 'Equalize', 'Brightness', 'Sharpness',
+                  'ShearX', 'ShearY', 'TranslateX', 'TranslateY', 'Rotate'],
+        ),
+        transforms.ToTensor(),
+        normalize,
+    ])
+    return train_transform
 
 class ImgSentDataset(Dataset):
     def __init__(self,
@@ -58,39 +64,21 @@ class ImgSentDataset(Dataset):
 
         # loading image features
         if not sentonly:
-            #import pdb; pdb.set_trace()
-            # with h5py.File(self.feature_file, "r") as f:
-            #     imgs = torch.from_numpy(np.array(f['features']))
+            with open(self.feature_file, "r") as f:
+                clip_data = json.load(f)
 
-            # if self.shuffle_imgs:
-            #     print('Ablation study: shuffling the imgs ')
-            #     index = np.random.choice(N, N, replace=False)
-            #     imgs = imgs[index]
-
-            # if self.random_imgs:
-            #     print('Ablation study: select random imgs ')
-            #     index = np.random.choice(N, N, replace=True)
-            #     imgs = imgs[index]
-
-            # for sent, img in zip(sentences, imgs):
-            #     d = {'sent': sent, 'img': img}
-            #     data.append(d)
-            
-            with open(self.feature_file, "r") as outfile:
-                clip_data = json.load(outfile)
-                
-
-            for k in tqdm(clip_data, desc="Processing flickr30k"):
+            for k in tqdm(clip_data, desc="Loading image-text pairs"):
                 img = torch.tensor(clip_data[k]['image_feat'])
-                image_path = os.path.join(self.image_root,clip_data[k]['image'])        
-                image = Image.open(image_path).convert('RGB')   
-                image = self.transform(image)   # (C, H, W)   C是通道数（通常为3，即RGB图像），H和W是图像的高度和宽度
+                image_path = os.path.join(self.image_root, clip_data[k]['image'])
+                image = Image.open(image_path).convert('RGB')
+                image = self.transform(image)  # (C, H, W)
                 for ic in range(len(clip_data[k]['captions'])):
                     sent = clip_data[k]['captions'][ic]
                     clip_feat = torch.tensor(clip_data[k]['lang_feat'][ic])
-                   
-                    d = {'image':image, 'sent': sent, 'img': img, 'clip_text_feat': clip_feat, 'img_key': k}
-                
+                    d = {'image': image, 'sent': sent, 'img': img,
+                         'clip_text_feat': clip_feat, 'img_key': k}
+                    data.append(d)
+
         else:
             for sent in sentences:
                 d = {'sent': sent}
