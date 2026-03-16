@@ -15,19 +15,12 @@ def get_transform(args):
     normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
            
     train_transform = transforms.Compose([      
-            #随机裁剪图像到指定的分辨率config['image_res']，裁剪区域的面积相对于原始图像面积的比例范围在0.5到1.0之间。使用双三次插值法                #   
-            # transforms.RandomResizedCrop(args.image_res,scale=(0.5, 1.0), interpolation=Image.BICUBIC),
+            
             transforms.RandomResizedCrop(args.image_res,scale=(0.5, 1.0), interpolation=InterpolationMode.BICUBIC),
-            # 以50%的概率随机水平翻转图像
             transforms.RandomHorizontalFlip(),
-            # RandomAugment是一个自定义的增强方法，随机应用两种增强操作（从给定的增强操作列表中选择），其中augs包含了一些常见的图像增强方法
             RandomAugment(2,7,isPIL=True,augs=['Identity','AutoContrast','Equalize','Brightness','Sharpness',
                                             'ShearX', 'ShearY', 'TranslateX', 'TranslateY', 'Rotate']),     
-            # 将PIL图像或numpy数组转换为形状为(C, H, W)且值范围为[0, 1]的张量。
-            # 这个操作会将图像从PIL格式转换为PyTorch张量
             transforms.ToTensor(),
-            # 它会对张量进行归一化处理。
-            # 通常，这个变换会将图像的每个通道（RGB）的值按一定的均值和标准差进行归一化
             normalize,
         ]) 
     

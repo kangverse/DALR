@@ -5,7 +5,6 @@ import torch
 PATH_TO_SENTEVAL = './SentEval'
 PATH_TO_DATA = './SentEval/data'
 
-# Import SentEval
 sys.path.insert(0, PATH_TO_SENTEVAL)
 import senteval
 

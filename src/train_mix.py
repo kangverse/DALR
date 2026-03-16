@@ -19,12 +19,8 @@ from accelerate import Accelerator
 from transformers import (
     AdamW,
     AutoConfig,
-    # AutoModelForSequenceClassification,
     AutoTokenizer,
-    # DataCollatorWithPadding,
-    # PretrainedConfig,
     SchedulerType,
-    # default_data_collator,
     get_scheduler,
     set_seed,
 )

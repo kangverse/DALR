@@ -1,10 +1,5 @@
 from tool import *
 
-# sentence-transformers/all-mpnet-base-v2
-# voidism/diffcse-bert-base-uncased-sts
-# princeton-nlp/sup-simcse-bert-base-uncased
-# runs/my-sup-promcse-roberta-large
-
 class Teacher(SimCSE):
     """
     A class for distilling ranking knowledge from SimCSE-based models. It is the same as the SimCSE except the features are precomputed and passed to the encode function.

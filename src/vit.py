@@ -9,7 +9,8 @@ from timm.models.layers import trunc_normal_, DropPath
 
 
 class Mlp(nn.Module):
-    """ MLP as used in Vision Transformer, MLP-Mixer and related networks
+    """ 
+    MLP as used in Vision Transformer, MLP-Mixer and related networks
     """
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
         super().__init__()

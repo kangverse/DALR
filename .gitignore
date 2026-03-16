@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# Virtual environments
+venv/
+env/
+.env
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data & Models (large files — download separately)
+data/Flickr/
+data/MS-COCO/
+data/wiki1m_for_simcse.txt
+Model/
+result/
+
+# Logs & checkpoints
+logs/
+*.log
+runs/
+wandb/
+*.pt
+*.pth
+*.bin
+*.ckpt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# SentEval datasets (downloaded separately)
+SentEval/data/downstream/
