@@ -19,7 +19,7 @@ EPS=4
 LBD=0.01
 MARGIN1=0.18
 MARGIN2=0.18
-# SCORE_BASE=0.66
+SCORE_BASE=0.66
 
 OUT_DIR=result/mix_flickr/mse/${SEED}_
 
