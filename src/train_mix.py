@@ -557,7 +557,6 @@ def main():
                     # evaluation
                     best_metric = metrics['eval_'+args.metric_for_best_model]
 
-                    # save (1) pytorch_model.bin  (2) config.json
                     logger.info("Saving best model checkpoint to %s", args.output_dir)
                     accelerator.wait_for_everyone() # wait for all processes to reach that point in the script
                     unwrapped_model = accelerator.unwrap_model(model)
@@ -568,7 +567,6 @@ def main():
                         accelerator.save(
                             {
                                 'visn_model': unwrapped_model.visn_model.state_dict(),
-                                # 'grounding': unwrapped_model.grounding.state_dict()
                                 'grounding_text': unwrapped_model.grounding_text.state_dict(),
                                 'grounding_image': unwrapped_model.grounding_image.state_dict()
                             },
