@@ -584,7 +584,6 @@ class DALR(nn.Module):
         self.teacher_model_first = teacher_model_first
         self.teacher_model_second = teacher_model_second
 
-        # grounding / alignment
         self.grounding_image = ImageGroundingAlignment(
             args.hidden_size, args.proj_dim
         )
@@ -592,7 +591,6 @@ class DALR(nn.Module):
             args.hidden_size, args.proj_dim
         )
 
-        # similarities
         self.sim = ArcSimilarity(
             temp=self.args.temp, margin=args.margin1
         )
@@ -626,7 +624,6 @@ class DALR(nn.Module):
         if self.using_threshhold:
             print("USING THRESHOLD")
 
-    # ------ helper KL function with more configs ------
 
     def KLContrastiveSimLoss(
         self,
@@ -655,7 +652,6 @@ class DALR(nn.Module):
 
         return loss
 
-    # ------ local-to-global in-batch contrastive loss ------
 
     def in_batch_g2l_loss(
         self,
@@ -717,8 +713,6 @@ class DALR(nn.Module):
 
         return loss
 
-    # ------ forward: encode only ------
-
     def forward(self, batch):
 
         lang_output = self.lang_model(
@@ -739,7 +733,6 @@ class DALR(nn.Module):
         batch_size = batch["input_ids"].size(0)
         num_sent = batch["input_ids"].size(1)
 
-        # [bs*2, hidden] -> [bs, 2, hidden]
         lang_pooled_output = lang_output.last_hidden_state[
             :, 0
         ].view(batch_size, num_sent, -1)
@@ -749,14 +742,12 @@ class DALR(nn.Module):
 
         return lang_pooled_output, lang_projection
 
-    # ------ main loss computation ------
 
     def compute_loss(self, batch, cal_inter: bool = False):
 
         l_pool, l_proj = self.forward(batch)
         self.hidden_size = l_proj.size(-1)
 
-        # sentence pair: z1 / z2
         z1, z2 = l_proj[:, 0], l_proj[:, 1]  # [B, H]
         cos_sim = self.sim(
             z1.unsqueeze(1), z2.unsqueeze(0)
@@ -770,9 +761,6 @@ class DALR(nn.Module):
         if not cal_inter:
             return loss
 
-        # =========================
-        # 1) Consistency Learning
-        # =========================
         image = batch["img"]
         matched_image, unmatched_image = prepare_data(image, labels)
 

@@ -99,8 +99,7 @@ class ArcSimilarity(nn.Module):
 
 class ConsistencySimilarityModule(nn.Module):
     def __init__(self, shared_dim=768, sim_dim=256):
-        super(ConsistencySimilarityModule, self).__init__()
-        # self.encoding = EncodingPart()
+        super().__init__()
         self.text_aligner = nn.Sequential(
             nn.Linear(shared_dim, shared_dim),
             nn.BatchNorm1d(shared_dim),
@@ -127,22 +126,18 @@ class ConsistencySimilarityModule(nn.Module):
         )
 
     def forward(self, text, image):
-        # text_encoding, image_encoding = self.encoding(text, image)
-        text_aligned = self.text_aligner(text) 
+        text_aligned = self.text_aligner(text)
         image_aligned = self.image_aligner(image)
         sim_feature = torch.cat([text_aligned, image_aligned], 1)
         pred_similarity = self.sim_classifier(sim_feature)
         return text_aligned, image_aligned, pred_similarity
 
 
-"""
-KL divergence loss
-make logits and softlabel have the same distribution
-logits to softlabel
-"""
 class KLContrastiveSimLoss(nn.Module):
+    """KL divergence loss: align logits distribution to softlabel distribution."""
+
     def __init__(self, tau):
-        super(KLContrastiveSimLoss, self).__init__()
+        super().__init__()
         self.tau = tau
    
     def forward(self, logits, softlabel):
@@ -162,7 +157,7 @@ class ListNet(nn.Module):
     ListNet objective for ranking distillation; minimizes the cross entropy between permutation [top-1] probability distribution and ground truth obtained from teacher
     """
     def __init__(self, tau, gamma_):
-        super(ListNet, self).__init__()
+        super().__init__()
         self.teacher_temp_scaled_sim = Similarity(tau / 2)
         self.student_temp_scaled_sim = Similarity(tau)
         self.gamma_ = gamma_
@@ -180,7 +175,7 @@ class ListMLE(nn.Module):
     ListMLE objective for ranking distillation; maximizes the liklihood of the ground truth permutation (sorted indices of the ranking lists obtained from teacher) 
     """
     def __init__(self, tau, gamma_):
-        super(ListMLE, self).__init__()
+        super().__init__()
         self.temp_scaled_sim = Similarity(tau)
         self.gamma_ = gamma_ 
         self.eps = 1e-7
@@ -217,12 +212,12 @@ class Divergence(nn.Module):
     Jensen-Shannon divergence, used to measure ranking consistency between similarity lists obtained from examples with two different dropout masks
     """
     def __init__(self, beta_):
-        super(Divergence, self).__init__()
+        super().__init__()
         self.kl = nn.KLDivLoss(reduction='batchmean', log_target=True)
         self.eps = 1e-7
         self.beta_ = beta_
 
-    def forward(self, p: torch.tensor, q: torch.tensor):
+    def forward(self, p: torch.Tensor, q: torch.Tensor):
         p, q = p.view(-1, p.size(-1)), q.view(-1, q.size(-1))
         m = (0.5 * (p + q)).log().clamp(min=self.eps)
         return 0.5 * (self.kl(m, p.log()) + self.kl(m, q.log()))
@@ -337,72 +332,59 @@ class ResNetVisnModel(nn.Module):
     
 
 class ClipVisnModel(nn.Module):
-    def __init__(self, feature_dim,  proj_dim):
+    def __init__(self, feature_dim, proj_dim):
         super().__init__()
-        self.vmlp = MLPLayer(feature_dim, proj_dim)  # visual features -> grounding space
-        self.tmlp = MLPLayer(feature_dim, proj_dim) # textual features -> grounding space
+        self.vmlp = MLPLayer(feature_dim, proj_dim)
+        self.tmlp = MLPLayer(feature_dim, proj_dim)
         self.logit_scale = torch.tensor(np.log(1 / 0.05))
         self.loss_fct = nn.CrossEntropyLoss()
 
     def logit(self, image_features, text_features):
         device = image_features.device
-        
         logit_scale = self.logit_scale.exp()
         logits_image_text = logit_scale * image_features @ text_features.t()
         logits_per_text = logits_image_text.t()
-        
-        #logits_image_text, logits_per_text = self.logit(images, texts)
         ground_truth = torch.arange(logits_image_text.size(0)).to(device)
-        total_loss = (self.loss_fct(logits_image_text,ground_truth) + self.loss_fct(logits_per_text,ground_truth))/2
-        
+        total_loss = (self.loss_fct(logits_image_text, ground_truth) + self.loss_fct(logits_per_text, ground_truth)) / 2
         return total_loss
 
     def forward(self, visn_feat, text_feat):
         visn_feat = self.vmlp(visn_feat)
         visn_feat = visn_feat / visn_feat.norm(2, dim=-1, keepdim=True)
-        
         text_feat = self.tmlp(text_feat)
         text_feat = text_feat / text_feat.norm(2, dim=-1, keepdim=True)
-        
-        return visn_feat, text_feat, None#self.logit(visn_feat, text_feat)
+        return visn_feat, text_feat, None
 
 
 class ClipVisnModelAlignment(nn.Module):
-    def __init__(self, feature_dim,  proj_dim):
+    def __init__(self, feature_dim, proj_dim):
         super().__init__()
         self.logit_scale = torch.tensor(np.log(1 / 0.05))
         self.loss_fct = nn.CrossEntropyLoss()
 
     def logit(self, image_features, text_features):
         device = image_features.device
-        
         logit_scale = self.logit_scale.exp()
         logits_image_text = logit_scale * image_features @ text_features.t()
         logits_per_text = logits_image_text.t()
-        
-        #logits_image_text, logits_per_text = self.logit(images, texts)
         ground_truth = torch.arange(logits_image_text.size(0)).to(device)
-        total_loss = (self.loss_fct(logits_image_text,ground_truth) + self.loss_fct(logits_per_text,ground_truth))/2
-        
+        total_loss = (self.loss_fct(logits_image_text, ground_truth) + self.loss_fct(logits_per_text, ground_truth)) / 2
         return total_loss
 
     def forward(self, visn_feat, text_feat, text_grounding, image_grounding):
-        self.vmlp = text_grounding  # visual features -> grounding space
-        self.tmlp = image_grounding # textual features -> grounding space
+        self.vmlp = text_grounding
+        self.tmlp = image_grounding
 
         visn_feat = self.vmlp(visn_feat)
         visn_feat = visn_feat / visn_feat.norm(2, dim=-1, keepdim=True)
-        
-        #text_feat = self.vmlp(text_feat) 2
         text_feat = self.tmlp(text_feat)
         text_feat = text_feat / text_feat.norm(2, dim=-1, keepdim=True)
-        
-        return visn_feat, text_feat, None#self.logit(visn_feat, text_feat)
+        return visn_feat, text_feat, None
 
 class ImageGrounding(nn.Module):
     def __init__(self, feature_dim, proj_dim):
-        super(ImageGrounding, self).__init__()
-        self.vmlp = MLPLayer(feature_dim, proj_dim)  # visual features -> grounding space
+        super().__init__()
+        self.vmlp = MLPLayer(feature_dim, proj_dim)
       
     def forward(self, visn_feat):
         visn_feat = self.vmlp(visn_feat)
@@ -412,8 +394,8 @@ class ImageGrounding(nn.Module):
 
 class TextGrounding(nn.Module):
     def __init__(self, feature_dim, proj_dim):
-        super(TextGrounding, self).__init__()
-        self.tmlp = MLPLayer(feature_dim, proj_dim) # textual features -> grounding space
+        super().__init__()
+        self.tmlp = MLPLayer(feature_dim, proj_dim)
        
     
     def forward(self, text_feat):
@@ -424,9 +406,8 @@ class TextGrounding(nn.Module):
 
 
 class ImageGroundingAlignment(nn.Module):
-    def __init__(self,  shared_dim=768, sim_dim=256):
-        super(ImageGroundingAlignment, self).__init__()
-        # self.vmlp = MLPLayer(feature_dim, proj_dim)
+    def __init__(self, shared_dim=768, sim_dim=256):
+        super().__init__()
         self.image_aligner = nn.Sequential(
             nn.Linear(shared_dim, shared_dim),
             nn.BatchNorm1d(shared_dim),
@@ -441,9 +422,8 @@ class ImageGroundingAlignment(nn.Module):
         return visn_feat
 
 class TextGroundingAlignment(nn.Module):
-    def __init__(self,  shared_dim=768, sim_dim=256):
-        super(TextGroundingAlignment, self).__init__()
-        # self.tmlp = MLPLayer(feature_dim, proj_dim)
+    def __init__(self, shared_dim=768, sim_dim=256):
+        super().__init__()
         self.text_aligner = nn.Sequential(
             nn.Linear(shared_dim, shared_dim),
             nn.BatchNorm1d(shared_dim),
@@ -461,7 +441,7 @@ class TextGroundingAlignment(nn.Module):
 
 class ConsistencySimilarityModuleAlignment(nn.Module):
     def __init__(self, text_aligner, image_aligner, sim_dim=256):
-        super(ConsistencySimilarityModuleAlignment, self).__init__()
+        super().__init__()
         self.text_aligner = text_aligner
         self.image_aligner = image_aligner
         
@@ -475,8 +455,7 @@ class ConsistencySimilarityModuleAlignment(nn.Module):
         )
 
     def forward(self, text, image):
-        # text_encoding, image_encoding = self.encoding(text, image)
-        text_aligned = self.text_aligner(text) 
+        text_aligned = self.text_aligner(text)
         image_aligned = self.image_aligner(image)
         sim_feature = torch.cat([text_aligned, image_aligned], 1)
         pred_similarity = self.sim_classifier(sim_feature)
@@ -484,7 +463,7 @@ class ConsistencySimilarityModuleAlignment(nn.Module):
 
 
 def prepare_data(image, label):
-    nr_index = [i for i, l in enumerate(label)]
+    nr_index = list(range(len(label)))
     if len(nr_index) < 2:
         nr_index.append(np.random.randint(len(label)))
         nr_index.append(np.random.randint(len(label)))
@@ -498,23 +477,21 @@ def prepare_data(image, label):
 
 
 class DALR(nn.Module):
-    def __init__(self, lang_model, visn_model, teacher_model_first, teacher_model_second: None, args):
+    def __init__(self, lang_model, visn_model, teacher_model_first, teacher_model_second=None, args=None):
         super().__init__()
         self.args = args
         self.lang_model = lang_model
         self.visn_model = visn_model
         self.teacher_model_first = teacher_model_first
         self.teacher_model_second = teacher_model_second
-        # self.grounding = MLPLayer(args.hidden_size, args.proj_dim)
-       
+
         self.grounding_image = ImageGroundingAlignment(args.hidden_size, args.proj_dim)
-        self.grounding_text =  MLPLayer(args.hidden_size, args.proj_dim)
-        
+        self.grounding_text = MLPLayer(args.hidden_size, args.proj_dim)
+
         self.sim = ArcSimilarity(temp=self.args.temp, margin=args.margin1)
         self.sim_vl = ArcSimilarity(temp=self.args.temp_vl, margin=args.margin2)
         self.cos_sim = Similarity(temp=self.args.temp)
         self.consistency = ConsistencySimilarityModule()
-        # self.consistency= ConsistencySimilarityModuleAlignment(text_aligner=self.grounding_text, image_aligner=self.grounding_image)
         self.loss_func_similarity = torch.nn.CosineEmbeddingLoss(margin=0.2)
         self.kl_loss = KLContrastiveSimLoss(tau=0.5)
         
@@ -527,8 +504,7 @@ class DALR(nn.Module):
         
         self.loss_fct = nn.CrossEntropyLoss()
         self.div = Divergence(beta_=self.args.beta_)
-        # self.sim = Similarity(temp=self.args.temp)
-        
+
         self.using_threshhold = args.using_threshhold
         if self.using_threshhold:
             print("USING THRESHOLD")
@@ -558,8 +534,6 @@ class DALR(nn.Module):
     
 
     def in_batch_g2l_loss(self, l, m, temp, attention_mask=None):
-            # print(l.size())
-            # print(m.size())
             m = m.unsqueeze(1)
             N, n_locals, dim = l.size()
             l_n = l.reshape(-1, dim) # (N * n_locals) * d
@@ -622,23 +596,18 @@ class DALR(nn.Module):
         l_pool, l_proj = self.forward(batch)
         self.hidden_size = l_proj.size(-1)
 
-        # Separate representation
         z1, z2 = l_proj[:, 0], l_proj[:, 1]  # (bs, hidden)
-        # z1, z2 = l_pool[:, 0], l_pool[:, 1]  # (bs, hidden)
         cos_sim = self.sim(z1.unsqueeze(1), z2.unsqueeze(0))  # (bs, bs)
-        # print(f"cos_sim: {cos_sim}")
 
-        labels = torch.arange(cos_sim.size(0)).long().to(self.args.device)  # [0, 1, bs-1]  (bs)
-        loss = self.loss_fct(cos_sim, labels)  # unsup: bs-1 negatives
-
+        labels = torch.arange(cos_sim.size(0)).long().to(self.args.device)
+        loss = self.loss_fct(cos_sim, labels)
 
         if not cal_inter:
             return loss
 
         else:
-
             # Consistency Learning
-            image =batch['img']
+            image = batch['img']
 
             matched_image, unmatched_image = prepare_data(image, labels)
             text_aligned_match, image_aligned_match, pred_similarity_match = self.consistency(z1, matched_image)
@@ -650,40 +619,31 @@ class DALR(nn.Module):
             image_aligned_4_task1 = torch.cat([image_aligned_match, image_aligned_unmatch], dim=0)
             loss_consistency = self.loss_func_similarity(text_aligned_4_task1, image_aligned_4_task1, similarity_label_1)
 
-            cross_modal_loss, intra_modal_loss, contrastive_loss = torch.tensor(0.0, device=self.device), torch.tensor(
-                0.0, device=self.device), torch.tensor(0.0, device=self.device)
+            cross_modal_loss, intra_modal_loss, contrastive_loss = torch.tensor(0.0, device=self.args.device), torch.tensor(
+                0.0, device=self.args.device), torch.tensor(0.0, device=self.args.device)
             
             # Knowledge Distillation
-            with torch.no_grad():         
-                # Read batch inputs
+            with torch.no_grad():
                 input_ids = batch["input_ids"]
                 attention_mask = batch["attention_mask"]
 
                 batch_size = batch['input_ids'].size(0)
                 num_sent = batch['input_ids'].size(1)
 
-                token_type_ids = None
-                if "token_type_ids" in batch:
-                    token_type_ids = batch["token_type_ids"]
-
-                # Flatten input for encoding by the teacher - (bsz * num_sent, len)
-                input_ids = input_ids.view((-1, input_ids.size(-1))) 
-                # token_type_ids = token_type_ids.view((-1, token_type_ids.size(-1))) 
+                input_ids = input_ids.view((-1, input_ids.size(-1)))
                 attention_mask = attention_mask.view((-1, attention_mask.size(-1)))
 
-                # teacher_inputs = copy.deepcopy(batch)
-                teacher_inputs = {}
-                teacher_inputs["input_ids"] = input_ids
-                teacher_inputs["attention_mask"] = attention_mask
-                # teacher_inputs["token_type_ids"] = token_type_ids
+                teacher_inputs = {
+                    "input_ids": input_ids,
+                    "attention_mask": attention_mask,
+                }
 
-                # Encode, unflatten, and pass to student
-                if self.teacher_model_second is None: 
+                if self.teacher_model_second is None:
                     # Single teacher
-                    embeddings, embeddings_local = self.teacher_model_first.encode(teacher_inputs,device=self.args.device)
+                    embeddings, embeddings_local = self.teacher_model_first.encode(teacher_inputs, device=self.args.device)
                     embeddings = embeddings.view((batch_size, num_sent, -1))
 
-                    z1T, z2T = embeddings[:,0], embeddings[:,1]
+                    z1T, z2T = embeddings[:, 0], embeddings[:, 1]
 
                     if self.args.fp16:
                         z1T = z1T.to(torch.float16)
@@ -693,19 +653,16 @@ class DALR(nn.Module):
 
                     teacher_top1_sim_pred = cos(z1T.unsqueeze(1), z2T.unsqueeze(0)) / self.args.tau2
                     teacher_text_features = z1T
-                    # teacher_top1_sim_pred = self.sim(z1T.unsqueeze(1), z2T.unsqueeze(0))
 
-            
                 else:
                     # Weighted average of two teachers
-                    embeddings1, embeddings1_local = self.teacher_model_first.encode(teacher_inputs,device=self.args.device)
-                    embeddings2, embeddings2_local = self.teacher_model_second.encode(teacher_inputs,device=self.args.device)
+                    embeddings1, embeddings1_local = self.teacher_model_first.encode(teacher_inputs, device=self.args.device)
+                    embeddings2, embeddings2_local = self.teacher_model_second.encode(teacher_inputs, device=self.args.device)
                     embeddings1 = embeddings1.view((batch_size, num_sent, -1))
                     embeddings2 = embeddings2.view((batch_size, num_sent, -1))
-                    first_teacher_z1, first_teacher_z2 = embeddings1[:,0], embeddings1[:,1]
-                    second_teacher_z1, second_teacher_z2 = embeddings2[:,0], embeddings2[:,1]
+                    first_teacher_z1, first_teacher_z2 = embeddings1[:, 0], embeddings1[:, 1]
+                    second_teacher_z1, second_teacher_z2 = embeddings2[:, 0], embeddings2[:, 1]
 
-                    
                     if self.args.fp16:
                         first_teacher_z1 = first_teacher_z1.to(torch.float16)
                         first_teacher_z2 = first_teacher_z2.to(torch.float16)
@@ -721,40 +678,37 @@ class DALR(nn.Module):
                     embeddings_local = (self.args.alpha_ * embeddings1_local) + ((1.0 - self.args.alpha_) * embeddings2_local)
         
 
-            student_top1_sim_pred = cos_sim.clone() 
+            student_top1_sim_pred = cos_sim.clone()
             embeddings_local = embeddings_local.view((batch_size, num_sent, -1, self.hidden_size))
             text_feats_local1, text_feats_local2 = embeddings_local[:, 0], embeddings_local[:, 1]
             text_feats_local1 = text_feats_local1 / text_feats_local1.norm(dim=1, keepdim=True)
             text_feats_local2 = text_feats_local2 / text_feats_local2.norm(dim=1, keepdim=True)
-           
+
             attention_mask = batch['attention_mask'].view((batch_size, num_sent, -1))
             attention_mask_1 = attention_mask[:, 0]
             attention_mask_2 = attention_mask[:, 1]
 
-            loss_t2t_inMod_l1 = self.in_batch_g2l_loss(text_feats_local1, z1, self.args.temp, attention_mask_1[:,1:])
-            loss_t2t_inMod_l2 = self.in_batch_g2l_loss(text_feats_local2, z1, self.args.temp, attention_mask_2[:,1:])
-            loss_g2l = (loss_t2t_inMod_l1 + loss_t2t_inMod_l2) / 2      
+            loss_t2t_l1 = self.in_batch_g2l_loss(text_feats_local1, z1, self.args.temp, attention_mask_1[:, 1:])
+            loss_t2t_l2 = self.in_batch_g2l_loss(text_feats_local2, z1, self.args.temp, attention_mask_2[:, 1:])
+            loss_g2l = (loss_t2t_l1 + loss_t2t_l2) / 2
 
             rank_loss = self.distillation_loss_fct(teacher_top1_sim_pred.to(self.args.device), student_top1_sim_pred)
-            rank_loss += loss_g2l  
+            rank_loss += loss_g2l
 
             vis_feats_t = batch['img'] / batch['img'].norm(2, dim=-1, keepdim=True)
             text_feats_t = teacher_text_features / teacher_text_features.norm(2, dim=-1, keepdim=True)
             logits_per_image = vis_feats_t @ vis_feats_t.t()
-            logits_per_text = text_feats_t @ text_feats_t.t() 
-            cos_sim_text_image = self.sim(z1.unsqueeze(1), vis_feats_t.unsqueeze(0)) 
+            logits_per_text = text_feats_t @ text_feats_t.t()
+            cos_sim_text_image = self.sim(z1.unsqueeze(1), vis_feats_t.unsqueeze(0))
 
-
-            cross_modal_alignment_loss = self.KLContrastiveSimLoss(cos_sim_text_image.t(), logits_per_image, 0.45, 0.5, use_loss="kl")                                         
+            cross_modal_alignment_loss = self.KLContrastiveSimLoss(cos_sim_text_image.t(), logits_per_image, 0.45, 0.5, use_loss="kl")
             cross_modal_alignment_loss += self.KLContrastiveSimLoss(cos_sim_text_image, logits_per_text, 0.45, 0.5, use_loss="kl")
             cross_modal_alignment_loss /= 2.0
-            
+
             z1_z2_cos = self.sim(z1.unsqueeze(1), z2.unsqueeze(0))
-            z2_z1_cos = self.sim(z2.unsqueeze(1), z1.unsqueeze(0))
-            # sd_loss = self.div(z1_z2_cos.softmax(dim=-1).clamp(min=1e-7), z2_z1_cos.softmax(dim=-1).clamp(min=1e-7))
-           
-            v, _, _ = self.visn_model(batch['img'], batch['clip_text_feat'])  # [bs, proj_dim]    
-            l2v_proj = self.grounding_text(l_pool)  # [bs, 2, proj_dim],  output for vision groundin
+
+            v, _, _ = self.visn_model(batch['img'], batch['clip_text_feat'])
+            l2v_proj = self.grounding_text(l_pool)
             l2v_proj = l2v_proj / l2v_proj.norm(2, dim=-1, keepdim=True)
             
             p1, p2 = l2v_proj[:, 0], l2v_proj[:, 1]  # (bs, proj)
