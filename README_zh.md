@@ -1,10 +1,9 @@
-[English](README.md) | [中文](README_zh.md)
-
 # DALR
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[English](README.md) | [中文](README_zh.md)
 
 ## 概述
 
