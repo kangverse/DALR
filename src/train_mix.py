@@ -6,6 +6,7 @@ from functools import partial
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
 import torch
+import datasets
 from tqdm.auto import tqdm
 
 import sys
@@ -315,10 +316,7 @@ def main():
     
     torch.cuda.empty_cache()
 
-    # # Initialize the accelerator.
     accelerator = Accelerator()
-    # accelerator = Accelerator(fp16=True)
-    args.device = accelerator.device
     args.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
@@ -503,9 +501,7 @@ def main():
     logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
     logger.info(f"  Total optimization steps = {args.max_train_steps}")
 
-    # Only show the progress bar once on each machine.
     progress_bar = tqdm(range(args.max_train_steps), disable=not accelerator.is_local_main_process)
-    # progress_bar = tqdm(range(args.max_train_steps), disable=False)
     completed_steps = 0
     best_metric = 0
 
@@ -585,9 +581,7 @@ def main():
                     accelerator.save(
                         {
                             'visn_model': unwrapped_model.visn_model.state_dict(),
-                            # 'grounding': unwrapped_model.grounding.state_dict()
-
-                            'grounding_text': unwrapped_model.grounding_text.state_dict(),
+                                'grounding_text': unwrapped_model.grounding_text.state_dict(),
                             'grounding_image': unwrapped_model.grounding_image.state_dict()
                         },
                         os.path.join(path, 'mse.pt')

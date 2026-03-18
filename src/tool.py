@@ -105,14 +105,12 @@ class SimCSE(object):
         else:
             key_vecs = keys
 
-        # check whether N == 1 or M == 1
         single_query, single_key = len(query_vecs.shape) == 1, len(key_vecs.shape) == 1 
         if single_query:
             query_vecs = query_vecs.reshape(1, -1)
         if single_key:
             key_vecs = key_vecs.reshape(1, -1)
         
-        # returns an N*M similarity array
         similarities = cosine_similarity(query_vecs, key_vecs)
         
         if single_query:
@@ -133,7 +131,7 @@ class SimCSE(object):
                 import faiss
                 assert hasattr(faiss, "IndexFlatIP")
                 use_faiss = True 
-            except:
+            except (ImportError, AssertionError):
                 logger.warning("Fail to import faiss. If you want to use faiss, install faiss through PyPI. Now the program continues with brute force search.")
                 use_faiss = False
         
