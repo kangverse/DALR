@@ -6,11 +6,9 @@
 export CUDA_VISIBLE_DEVICES=0
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:32
 
-# export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
 IMG=data/train_coco_ViT_L14.json
 CAPTION=data/coco_random_captions.txt
 TEXT=data/wiki1m_for_simcse.txt
-# IMAGE_ROOT=data/flickr30k/flickr30k-images
 
 SEED=1
 MODEL=Model/bert-base-uncased
