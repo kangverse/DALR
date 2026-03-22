@@ -205,7 +205,8 @@ DALR/
 ├── requirements.txt
 ├── LICENSE
 ├── CONTRIBUTING.md
-└── README.md
+├── README.md
+└── README_zh.md
 ```
 
 ---
@@ -228,8 +229,6 @@ If you find this work useful in your research, please consider citing:
     pages = "3586--3601",   
 }
 ```
-
-> Note: Please update the citation with the actual paper details once published.
 
 ---
 
