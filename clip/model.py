@@ -259,19 +259,9 @@ class CLIP(nn.Module):
 
         self.context_length = context_length
 
-        # modified by @lerogo
         self.embed_dim = embed_dim
 
-        # if isinstance(vision_layers, (tuple, list)):
-        #     vision_heads = vision_width * 32 // 64
-        #     self.visual = ModifiedResNet(
-        #         layers=vision_layers,
-        #         output_dim=embed_dim,
-        #         heads=vision_heads,
-        #         input_resolution=image_resolution,
-        #         width=vision_width
-        #     )
-        # else:
+        # Only use VisionTransformer (ViT) as the visual backbone
         vision_heads = vision_width // 64
         self.visual = VisionTransformer(
             input_resolution=image_resolution,
@@ -295,8 +285,7 @@ class CLIP(nn.Module):
         self.ln_final = LayerNorm(transformer_width)
 
         self.text_projection = nn.Parameter(torch.empty(transformer_width, embed_dim))
-        # modified by @lerogo
-        # self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+        # logit_scale is removed as it is not needed for feature extraction
 
         self.initialize_parameters()
 
@@ -360,26 +349,21 @@ class CLIP(nn.Module):
         return x
 
     def forward(self, image, text):
-        """
-        Modify the forward pass to return the feature.
-        by @lerogo
+        """Forward pass that returns raw image and text features.
+
+        Unlike the original CLIP forward pass, this does not compute
+        cosine similarity logits. Instead, it returns unnormalized
+        feature vectors for downstream tasks.
+
+        Returns
+        -------
+        image_features : torch.Tensor
+            Shape [batch_size, embed_dim]
+        text_features : torch.Tensor
+            Shape [batch_size, embed_dim]
         """
         image_features = self.encode_image(image)
         text_features = self.encode_text(text)
-
-        # raw_image_features = image_features
-        # raw_text_features = text_features
-
-        # # normalized features
-        # image_features = image_features / image_features.norm(dim=1, keepdim=True)
-        # text_features = text_features / text_features.norm(dim=1, keepdim=True)
-
-        # # cosine similarity as logits
-        # logit_scale = self.logit_scale.exp()
-        # logits_per_image = logit_scale * image_features @ text_features.t()
-        # logits_per_text = logits_per_image.t()
-
-        # shape = [global_batch_size, global_batch_size]
         return image_features, text_features
 
 
@@ -408,8 +392,7 @@ def convert_weights(model: nn.Module):
 
 
 def convert_models_to_fp32(model):
-    """Convert applicable model parameters to fp32"""
-    # modified by @lerogo
+    """Convert applicable model parameters to fp32."""
     for p in model.parameters():
         p.data = p.data.float()
         if p.requires_grad:
@@ -447,13 +430,11 @@ def build_model(state_dict: dict):
         context_length, vocab_size, transformer_width, transformer_heads, transformer_layers
     )
 
-    # modified by @lerogo
-    # for key in ["input_resolution", "context_length", "vocab_size"]:
+    # Remove non-parameter keys (including logit_scale) from state dict
     for key in ["input_resolution", "context_length", "vocab_size", "logit_scale"]:
         if key in state_dict:
             del state_dict[key]
 
-    # modified by @lerogo
-    # convert_weights(model)
+    # Skip fp16 weight conversion to keep fp32 precision
     model.load_state_dict(state_dict)
     return model.eval()

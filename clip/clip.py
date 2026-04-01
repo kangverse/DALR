@@ -92,8 +92,22 @@ def available_models() -> List[str]:
 
 
 def load_by_state_dict(state_dict, device):
-    """modified from load()"""
-    # modified by @lerogo
+    """Load a CLIP model from a state dict.
+
+    Parameters
+    ----------
+    state_dict : dict
+        The model state dict to load from
+    device : Union[str, torch.device]
+        The device to put the loaded model
+
+    Returns
+    -------
+    model : torch.nn.Module
+        The CLIP model
+    preprocess : Callable[[PIL.Image], torch.Tensor]
+        A torchvision transform that converts a PIL image into a tensor
+    """
     model = build_model(state_dict).to(device)
     if str(device) == "cpu":
         model.float()
