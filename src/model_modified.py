@@ -172,7 +172,7 @@ class ListNet(nn.Module):
 
 class ListMLE(nn.Module):
     """
-    ListMLE objective for ranking distillation; maximizes the liklihood of the ground truth permutation (sorted indices of the ranking lists obtained from teacher) 
+    ListMLE objective for ranking distillation; maximizes the likelihood of the ground truth permutation (sorted indices of the ranking lists obtained from teacher).
     """
     def __init__(self, tau, gamma_):
         super().__init__()
