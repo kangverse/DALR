@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest an idea, improvement, or new experiment for DALR.
+title: "[FEATURE] <short description>"
+labels: ["enhancement"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a feature! Please fill in the
+        fields below so we can understand the motivation and scope.
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: |
+        Is the request tied to a concrete problem? What use case is currently
+        hard or impossible to support?
+      placeholder: "I'd like to evaluate on dataset X but the current loader assumes..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you considered and why they were not chosen.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: References to papers, related issues, sketches, or pseudocode.
+    validations:
+      required: false

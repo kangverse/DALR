@@ -1,0 +1,99 @@
+name: Bug report
+description: Report a reproducible bug or unexpected behavior in DALR.
+title: "[BUG] <short description>"
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! Please fill in the fields
+        below — the more reproduction detail you provide, the faster we can help.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the bug.
+      placeholder: Training crashes after the first evaluation step.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands and configuration needed to trigger the bug.
+      value: |
+        1. Run `bash scripts/...`
+        2. Wait for ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: |
+        What actually happened. Paste the full error message and stack trace
+        inside a fenced code block.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "e.g. Ubuntu 20.04, macOS 14.4"
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "e.g. 3.8.12"
+    validations:
+      required: true
+
+  - type: input
+    id: pytorch
+    attributes:
+      label: PyTorch version
+      placeholder: "e.g. 1.8.1+cu111"
+    validations:
+      required: true
+
+  - type: input
+    id: cuda
+    attributes:
+      label: CUDA version
+      placeholder: "e.g. 11.1 (or 'CPU only')"
+    validations:
+      required: true
+
+  - type: input
+    id: transformers
+    attributes:
+      label: transformers version
+      placeholder: "e.g. 4.8.2"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Screenshots, config files, hypotheses, anything else helpful.
+    validations:
+      required: false

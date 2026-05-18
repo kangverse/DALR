@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or general discussion
+    url: https://github.com/kangverse/DALR/discussions
+    about: Open a Discussion instead of an Issue for usage questions or research talks.
