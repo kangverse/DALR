@@ -30,6 +30,11 @@ ignore = [
     "E501",  # line too long — covered by `line-length`, do not double-warn
     "E741",  # ambiguous variable names (l, I, O) — common in ML code
     "B008",  # do not perform function call in argument defaults — common in PyTorch
+    "E402",  # module level import not at top — research scripts adjust sys.path first
+    "E701",  # multiple statements on one line — common in compact ML code
+    "F841",  # unused local variable — common when iterating on experiments
+    "UP031", # printf-style formatting — kept for log message readability
+    "B007",  # unused loop variable — common in nested loops over experiments
 ]
 
 [tool.ruff.lint.per-file-ignores]
