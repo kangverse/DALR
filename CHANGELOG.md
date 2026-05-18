@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CITATION.cff` for GitHub's "Cite this repository" feature
 - This changelog
 
+### Changed
+- Consolidated the two model files: the legacy `src/model_dalr.py` was
+  removed and `src/model_modified.py` (the version used by the training
+  pipeline) was renamed to `src/model_dalr.py`.
+
 ## [0.1.0] - 2025-03-20
 
 Initial public release accompanying the ACL 2025 Findings paper
