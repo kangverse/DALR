@@ -23,7 +23,7 @@ from transformers import (
 
 from clip import *  # noqa: F403  -- re-export of the vendored CLIP package
 from data import ImgSentDataset, get_transform
-from model_modified import DALR, BertForCL, ClipVisnModel, RobertaForCL
+from model_dalr import DALR, BertForCL, ClipVisnModel, RobertaForCL
 from teachers import Teacher
 from utils import evaluate, inf_train_gen
 
