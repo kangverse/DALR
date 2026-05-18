@@ -1,14 +1,15 @@
-import os
 import json
-import torch
+import os
+
 import numpy as np
+import torch
+from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.transforms import InterpolationMode
-from PIL import Image
 from tqdm import tqdm
-from randaugment import RandomAugment
 
+from randaugment import RandomAugment
 
 # CLIP image normalization constants (mean and std over ImageNet)
 _CLIP_MEAN = (0.48145466, 0.4578275, 0.40821073)
@@ -57,14 +58,14 @@ class ImgSentDataset(Dataset):
         sentonly = True if self.feature_file is None else False
 
         # loading sentences
-        with open(self.text_file, 'r') as f:
+        with open(self.text_file) as f:
             sentences = [l.strip() for l in f.readlines()]
 
         N = len(sentences)
 
         # loading image features
         if not sentonly:
-            with open(self.feature_file, "r") as f:
+            with open(self.feature_file) as f:
                 clip_data = json.load(f)
 
             for k in tqdm(clip_data, desc="Loading image-text pairs"):

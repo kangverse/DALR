@@ -1,12 +1,12 @@
+import math
+
+import numpy as np
 import torch
 import torch.nn as nn
-from transformers.models.bert.modeling_bert import BertPreTrainedModel, BertModel, BertLMPredictionHead
-from transformers.models.roberta.modeling_roberta import RobertaPreTrainedModel, RobertaModel, RobertaLMHead
-from transformers.modeling_outputs import SequenceClassifierOutput, BaseModelOutputWithPoolingAndCrossAttentions
 import torch.nn.functional as F
-import math
-import numpy as np
-import copy
+from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
+from transformers.models.bert.modeling_bert import BertModel, BertPreTrainedModel
+from transformers.models.roberta.modeling_roberta import RobertaModel, RobertaPreTrainedModel
 
 
 class MLPLayer(nn.Module):
@@ -37,7 +37,7 @@ class Similarity(nn.Module):
 
     def forward(self, x, y):
         return self.cos(x, y) / self.temp
-    
+
 class ArcSimilarity(nn.Module):
     """
     Dot product or cosine similarity
@@ -48,49 +48,49 @@ class ArcSimilarity(nn.Module):
         self.temp = temp
         self.margin = margin
         self.cos = nn.CosineSimilarity(dim=-1)
-        
+
     def calculate_arccos1(self, cos_sim, labels=None):
         theta = torch.acos(torch.clamp(cos_sim, -1, 1))
-        
+
         if labels is None:
             labels = torch.arange(cos_sim.size(0)).long().to(cos_sim.device)
-        
+
         num_classes = labels.max().item() + 1
         one_hot_labels = F.one_hot(labels, num_classes)
-        
+
         selected_labels = torch.where(
             torch.gt(theta, math.pi - self.margin),
-            torch.zeros_like(one_hot_labels),one_hot_labels)    
-        
-        
+            torch.zeros_like(one_hot_labels),one_hot_labels)
+
+
         final_theta = torch.where(selected_labels.bool(),
                                     theta + self.margin,
                                     theta)
-        
+
         return torch.cos(final_theta)
-    
+
     def calculate_arccos2(self, cos_sim, labels=None, slabels=None):
         theta = torch.acos(torch.clamp(cos_sim, -1, 1))
-        
+
         if labels is None:
             labels = torch.arange(cos_sim.size(0)).long().to(cos_sim.device)
         num_classes = labels.max().item() + 1
         one_hot_labels = F.one_hot(labels, num_classes)
-        
+
         selected_labels = torch.where(
             torch.gt(theta, self.margin),
             torch.ones_like(one_hot_labels),one_hot_labels) * torch.abs(one_hot_labels - 1)
-        
+
         if slabels is None:
             final_theta = torch.where(selected_labels.bool(),
                                     theta - self.margin,
                                     theta)
-            
+
         else:
             final_theta = torch.where(selected_labels.bool(),
                                     theta - (1-slabels)*self.margin,
                                     theta)
-            
+
         return torch.cos(final_theta)
 
     def forward(self, x, y, slabels=None):
@@ -139,7 +139,7 @@ class KLContrastiveSimLoss(nn.Module):
     def __init__(self, tau):
         super().__init__()
         self.tau = tau
-   
+
     def forward(self, logits, softlabel):
         # softmax for softlabel
         sim_targets = F.softmax(softlabel / self.tau, dim=1)
@@ -166,7 +166,7 @@ class ListNet(nn.Module):
         p = F.log_softmax(student_top1_sim_pred.fill_diagonal_(float('-inf')), dim=-1)
         q = F.softmax(teacher_top1_sim_pred.fill_diagonal_(float('-inf')), dim=-1)
         loss = -(q*p).nansum()  / q.nansum()
-        return self.gamma_ * loss 
+        return self.gamma_ * loss
 
 
 
@@ -177,16 +177,16 @@ class ListMLE(nn.Module):
     def __init__(self, tau, gamma_):
         super().__init__()
         self.temp_scaled_sim = Similarity(tau)
-        self.gamma_ = gamma_ 
+        self.gamma_ = gamma_
         self.eps = 1e-7
 
     def forward(self, teacher_top1_sim_pred, student_top1_sim_pred, k=None):
         if k is not None:
             sublist_indices = (student_top1_sim_pred.shape[1] * torch.rand(size=k)).long()
-            y_pred = student_top1_sim_pred[:, sublist_indices] 
-            y_true = teacher_top1_sim_pred[:, sublist_indices] 
+            y_pred = student_top1_sim_pred[:, sublist_indices]
+            y_true = teacher_top1_sim_pred[:, sublist_indices]
 
-        y_pred = student_top1_sim_pred 
+        y_pred = student_top1_sim_pred
         y_true = teacher_top1_sim_pred
 
         # shuffle for randomised tie resolution
@@ -329,7 +329,7 @@ class ResNetVisnModel(nn.Module):
         x = self.mlp(x)
         x = x / x.norm(2, dim=-1, keepdim=True)
         return x
-    
+
 
 class ClipVisnModel(nn.Module):
     def __init__(self, feature_dim, proj_dim):
@@ -385,7 +385,7 @@ class ImageGrounding(nn.Module):
     def __init__(self, feature_dim, proj_dim):
         super().__init__()
         self.vmlp = MLPLayer(feature_dim, proj_dim)
-      
+
     def forward(self, visn_feat):
         visn_feat = self.vmlp(visn_feat)
         visn_feat = visn_feat / visn_feat.norm(2, dim=-1, keepdim=True)
@@ -396,8 +396,8 @@ class TextGrounding(nn.Module):
     def __init__(self, feature_dim, proj_dim):
         super().__init__()
         self.tmlp = MLPLayer(feature_dim, proj_dim)
-       
-    
+
+
     def forward(self, text_feat):
         text_feat = self.tmlp(text_feat)
         text_feat = text_feat / text_feat.norm(2, dim=-1, keepdim=True)
@@ -444,7 +444,7 @@ class ConsistencySimilarityModuleAlignment(nn.Module):
         super().__init__()
         self.text_aligner = text_aligner
         self.image_aligner = image_aligner
-        
+
         self.sim_classifier_dim = sim_dim * 2
         self.sim_classifier = nn.Sequential(
             nn.BatchNorm1d(self.sim_classifier_dim),
@@ -467,12 +467,12 @@ def prepare_data(image, label):
     if len(nr_index) < 2:
         nr_index.append(np.random.randint(len(label)))
         nr_index.append(np.random.randint(len(label)))
-    
+
     image_nr = image[nr_index]
-    
+
     matched_image = image_nr.clone()
     unmatched_image = image_nr.clone().roll(shifts=5, dims=0)
-    
+
     return matched_image, unmatched_image
 
 
@@ -494,21 +494,21 @@ class DALR(nn.Module):
         self.consistency = ConsistencySimilarityModule()
         self.loss_func_similarity = torch.nn.CosineEmbeddingLoss(margin=0.2)
         self.kl_loss = KLContrastiveSimLoss(tau=0.5)
-        
+
         if self.args.distillation_loss == "listnet":
             self.distillation_loss_fct = ListNet(self.args.tau2, self.args.gamma_)
         elif self.args.distillation_loss == "listmle":
             self.distillation_loss_fct = ListMLE(self.args.tau2, self.args.gamma_)
         else:
             raise NotImplementedError
-        
+
         self.loss_fct = nn.CrossEntropyLoss()
         self.div = Divergence(beta_=self.args.beta_)
 
         self.using_threshhold = args.using_threshhold
         if self.using_threshhold:
             print("USING THRESHOLD")
-    
+
     def KLContrastiveSimLoss(self, logits, softlabel, tau, softlabel_tau, use_loss="kl"):
         """
         KL divergence loss
@@ -526,12 +526,12 @@ class DALR(nn.Module):
             loss = F.kl_div(logit_inputs, sim_targets, reduction='batchmean')
         elif use_loss == "contrastive":
             loss = -torch.sum(logit_inputs * sim_targets, dim=1).mean()
-            
+
         else:
             raise ValueError("loss mode error")
 
-        return loss    
-    
+        return loss
+
 
     def in_batch_g2l_loss(self, l, m, temp, attention_mask=None):
             m = m.unsqueeze(1)
@@ -542,12 +542,12 @@ class DALR(nn.Module):
             # Inner product for positive samples. Outer product for negative. We need to do it this way
             # for the multiclass loss. For the outer product, we want a N x N x n_locals x 1 tensor.
             u_p = torch.matmul(l, m.permute(0,2,1)).unsqueeze(2) / temp # N * n_locals * 1 * 1
-            
+
             # if l comes from text, then attention_mask is not None
             if attention_mask is not None:
                 temp_mask = attention_mask.unsqueeze(2).unsqueeze(3)
                 u_p = (temp_mask * u_p) + (10000. * (1-temp_mask))
-            
+
             u_n = torch.mm(m_n, l_n.t()) / temp
             u_n = u_n.reshape(N, 1, N, n_locals).permute(0, 2, 3, 1) # N x N x n_locals x 1
 
@@ -621,7 +621,7 @@ class DALR(nn.Module):
 
             cross_modal_loss, intra_modal_loss, contrastive_loss = torch.tensor(0.0, device=self.args.device), torch.tensor(
                 0.0, device=self.args.device), torch.tensor(0.0, device=self.args.device)
-            
+
             # Knowledge Distillation
             with torch.no_grad():
                 input_ids = batch["input_ids"]
@@ -672,11 +672,11 @@ class DALR(nn.Module):
                     cos = nn.CosineSimilarity(dim=-1)
                     first_teacher_top1_sim = cos(first_teacher_z1.unsqueeze(1), first_teacher_z2.unsqueeze(0)) / self.args.tau2
                     second_teacher_top1_sim = cos(second_teacher_z1.unsqueeze(1), second_teacher_z2.unsqueeze(0)) / self.args.tau2
-                   
+
                     teacher_top1_sim_pred = (self.args.alpha_ * first_teacher_top1_sim) + ((1.0 - self.args.alpha_) * second_teacher_top1_sim)
                     teacher_text_features = (self.args.alpha_ * first_teacher_z1) + ((1.0 - self.args.alpha_) * second_teacher_z1)
                     embeddings_local = (self.args.alpha_ * embeddings1_local) + ((1.0 - self.args.alpha_) * embeddings2_local)
-        
+
 
             student_top1_sim_pred = cos_sim.clone()
             embeddings_local = embeddings_local.view((batch_size, num_sent, -1, self.hidden_size))
@@ -710,11 +710,11 @@ class DALR(nn.Module):
             v, _, _ = self.visn_model(batch['img'], batch['clip_text_feat'])
             l2v_proj = self.grounding_text(l_pool)
             l2v_proj = l2v_proj / l2v_proj.norm(2, dim=-1, keepdim=True)
-            
+
             p1, p2 = l2v_proj[:, 0], l2v_proj[:, 1]  # (bs, proj)
             cos_sim_p0_v = self.sim_vl(p1.unsqueeze(1), v.unsqueeze(0), slabels=logits_per_image)  # (bs, bs)
             cos_sim_p1_v = self.sim_vl(p2.unsqueeze(1), v.unsqueeze(0), slabels=logits_per_image)
-            
+
             cross_loss = (self.loss_fct(cos_sim_p0_v, labels) + self.loss_fct(cos_sim_p1_v, labels)) / 2
             cross_modal_loss = 0.01 * loss_consistency + cross_modal_alignment_loss + cross_loss
 

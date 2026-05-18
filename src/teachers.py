@@ -1,26 +1,29 @@
+from typing import Union
+
 import torch
 from numpy import ndarray
 from torch import Tensor
-from typing import Union
+
 from tool import SimCSE
+
 
 class Teacher(SimCSE):
     """
     A class for distilling ranking knowledge from SimCSE-based models. It is the same as the SimCSE except the features are precomputed and passed to the encode function.
     """
 
-    def __init__(self, model_name_or_path: str = "voidism/diffcse-bert-base-uncased-sts", 
+    def __init__(self, model_name_or_path: str = "voidism/diffcse-bert-base-uncased-sts",
                 device: str = None,
                 num_cells: int = 100,
                 num_cells_in_search: int = 10,
                 pooler = "cls"):
-        
+
         super().__init__(model_name_or_path, device, num_cells, num_cells_in_search, pooler)
         self.model = self.model.to(self.device if device is None else device)
 
-    def encode(self, 
+    def encode(self,
                 inputs = None,
-                device: str = "cuda:0", 
+                device: str = "cuda:0",
                 return_numpy: bool = False,
                 normalize_to_unit: bool = False,
                 keepdim: bool = False,
@@ -30,7 +33,7 @@ class Teacher(SimCSE):
         target_device = self.device if device is None else device
         single_sentence = False
 
-        embedding_list = [] 
+        embedding_list = []
         embedding_local_list = []
         with torch.no_grad():
             inputs = {k: v.to(target_device) for k, v in inputs.items()}
@@ -54,4 +57,3 @@ class Teacher(SimCSE):
             embeddings_local = torch.cat(embedding_local_list)
 
         return embeddings, embeddings_local
-        

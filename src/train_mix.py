@@ -2,17 +2,14 @@ import argparse
 import logging
 import math
 import os
-from functools import partial
-from torch import nn
-from torch.utils.data.dataloader import DataLoader
-import torch
+import sys
+
 import datasets
+import torch
+from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
 
-import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
-from clip import *
-
 import transformers
 from accelerate import Accelerator
 from transformers import (
@@ -24,12 +21,11 @@ from transformers import (
     set_seed,
 )
 
-from datasets import load_dataset
-from teachers import Teacher
+from clip import *
 from data import ImgSentDataset, get_transform
-from model_modified import DALR, BertForCL, ClipVisnModelAlignment, RobertaForCL, ResNetVisnModel, ClipVisnModel
+from model_modified import DALR, BertForCL, ClipVisnModel, RobertaForCL
+from teachers import Teacher
 from utils import evaluate, inf_train_gen
-from vit import VisionTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +222,7 @@ def parse_args():
         default=70.0,
         help="score_base.",
     )
-   
+
 
     parser.add_argument(
         "--hidden_size",
@@ -313,7 +309,7 @@ def parse_args():
 def main():
     args = parse_args()
     print(args)
-    
+
     torch.cuda.empty_cache()
 
     accelerator = Accelerator()
@@ -362,9 +358,9 @@ def main():
         raise NotImplementedError
 
     if args.framework.lower() == 'mse':
-        
+
         visn_model = ClipVisnModel(768, args.proj_dim)
-        
+
     else:
         visn_model = None
 
@@ -381,7 +377,7 @@ def main():
         second_teacher_text = Teacher(model_name_or_path=args.second_teacher_model_name_or_path, pooler=second_pooler)
         model = DALR(lang_model, visn_model, teacher_model_first=first_teacher_text, teacher_model_second=second_teacher_text, args=args)
 
-  
+
     # Define collator function
     def data_collator(batch):
         keys = batch[0].keys()
@@ -400,22 +396,22 @@ def main():
 
         if 'img' in keys:
             new_batch['img'] = torch.stack([batch[i]['img'] for i in range(total)])
-        
+
         if 'clip_text_feat' in keys:
             new_batch['clip_text_feat'] = torch.stack([batch[i]['clip_text_feat'] for i in range(total)])
-            
+
         # ### Create a soft label
         if 'img' in keys and 'clip_text_feat' in keys:
             vc_scores = new_batch['img'] @ new_batch['clip_text_feat'].t()
             cv_scores = new_batch['clip_text_feat'] @ new_batch['img'].t()
-            
+
             vis_feats_t = new_batch['img'] / new_batch['img'].norm(dim=1, keepdim=True)
             caption_feats_t = new_batch['clip_text_feat'] / new_batch['clip_text_feat'].norm(dim=1, keepdim=True)
-            
+
             vv_scores_ = vis_feats_t @ vis_feats_t.t()
-            cc_scores_ = caption_feats_t @ caption_feats_t.t()  
-            
-            
+            cc_scores_ = caption_feats_t @ caption_feats_t.t()
+
+
             vc_labels = torch.where(torch.logical_and(vc_scores>args.score_base,~torch.eye(vc_scores.size(0),dtype=bool)),
             1,
             0) * -99999.99
@@ -424,7 +420,7 @@ def main():
             0) * -99999.99
             new_batch['vc_slabels'] = vc_labels
             new_batch['cv_slabels'] = cv_labels
-            
+
             new_batch['vv_scores'] = vv_scores_
             new_batch['cc_scores'] = cc_scores_
         # # ###
@@ -435,7 +431,7 @@ def main():
                 new_batch[key] = tokenized_sents[key].unsqueeze(1).repeat(1, 2, 1)
 
         return new_batch
-    
+
     # dataset and dataloader (it's better to implement it by Sampler)
     train_dataset_textonly = ImgSentDataset(text_file = args.text_file, feature_file = None)
     train_dataloader_textonly = DataLoader(train_dataset_textonly,
@@ -443,8 +439,8 @@ def main():
                                       batch_size=args.per_device_train_batch_size,
                                       collate_fn=data_collator)
     textonly_loader = inf_train_gen(train_dataloader_textonly)
-   
-   
+
+
     train_dataset_pair = ImgSentDataset(text_file=args.caption_file, feature_file=args.feature_file, image_root=args.image_root, transform=transform)
     train_dataloader_pair = DataLoader(train_dataset_pair,
                                     shuffle=True,
@@ -491,7 +487,7 @@ def main():
 
     # Train!   num_processes -> 1
     total_batch_size = args.per_device_train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
-    
+
     logger.info("***** Running training *****")
     logger.info(f"  Num text examples = {len(train_dataset_textonly)}")
     logger.info(f"  Num paired examples = {len(train_dataset_pair)}")
@@ -525,7 +521,7 @@ def main():
 
             if step % paired_sample_step == 0 and args.framework.lower() == 'mse':
                 contrastive_loss, cross_loss, intra_loss =  model.compute_loss(batch, cal_inter=True)
-                loss =  contrastive_loss + 0.1 * cross_loss + 0.2  * intra_loss 
+                loss =  contrastive_loss + 0.1 * cross_loss + 0.2  * intra_loss
             else:
                 loss = model.compute_loss(batch, cal_inter=False)
 
@@ -557,7 +553,7 @@ def main():
                     accelerator.wait_for_everyone() # wait for all processes to reach that point in the script
                     unwrapped_model = accelerator.unwrap_model(model)
                     unwrapped_model.lang_model.save_pretrained(args.output_dir, save_function=accelerator.save)
-                   
+
 
                     if args.framework.lower() == 'mse':
                         accelerator.save(

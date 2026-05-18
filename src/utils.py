@@ -1,4 +1,5 @@
 import sys
+
 import torch
 
 # Set path to SentEval
@@ -7,6 +8,7 @@ PATH_TO_DATA = './SentEval/data'
 
 sys.path.insert(0, PATH_TO_SENTEVAL)
 import senteval
+
 
 def evaluate(model, tokenizer):
     def prepare(params, samples):

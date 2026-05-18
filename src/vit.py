@@ -1,14 +1,13 @@
 import logging
+from functools import partial
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from functools import partial
 
 logger = logging.getLogger(__name__)
 
-from timm.models.vision_transformer import _cfg, PatchEmbed
-from timm.models.registry import register_model
-from timm.models.layers import trunc_normal_, DropPath
+from timm.models.layers import DropPath, trunc_normal_
+from timm.models.vision_transformer import PatchEmbed
 
 
 class Mlp(nn.Module):
@@ -46,19 +45,19 @@ class Attention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
         self.attn_gradients = None
         self.attention_map = None
-        
+
     def save_attn_gradients(self, attn_gradients):
         self.attn_gradients = attn_gradients
-        
+
     def get_attn_gradients(self):
         return self.attn_gradients
-    
+
     def save_attention_map(self, attention_map):
         self.attention_map = attention_map
-        
+
     def get_attention_map(self):
         return self.attention_map
-    
+
     def forward(self, x, register_hook=False):
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
@@ -67,10 +66,10 @@ class Attention(nn.Module):
         attn = (q @ k.transpose(-2, -1)) * self.scale
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
-                
+
         if register_hook:
             self.save_attention_map(attn)
-            attn.register_hook(self.save_attn_gradients)        
+            attn.register_hook(self.save_attn_gradients)
 
         x = (attn @ v).transpose(1, 2).reshape(B, N, C)
         x = self.proj(x)
@@ -96,8 +95,8 @@ class Block(nn.Module):
         x = x + self.drop_path(self.attn(self.norm1(x), register_hook=register_hook))
         x = x + self.drop_path(self.mlp(self.norm2(x)))
         return x
-    
-    
+
+
 class VisionTransformer(nn.Module):
     """ Vision Transformer
     A PyTorch impl of : `An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale`  -
@@ -168,19 +167,19 @@ class VisionTransformer(nn.Module):
 
         cls_tokens = self.cls_token.expand(B, -1, -1)  # stole cls_tokens impl from Phil Wang, thanks
         x = torch.cat((cls_tokens, x), dim=1)
-  
+
         x = x + self.pos_embed[:,:x.size(1),:]
         x = self.pos_drop(x)
 
         for i,blk in enumerate(self.blocks):
             x = blk(x, register_blk==i)
         x = self.norm(x)
-        
+
         return x
 
 
 
-def interpolate_pos_embed(pos_embed_checkpoint, visual_encoder):        
+def interpolate_pos_embed(pos_embed_checkpoint, visual_encoder):
     # interpolate position embedding
     embedding_size = pos_embed_checkpoint.shape[-1]
     num_patches = visual_encoder.patch_embed.num_patches
@@ -201,7 +200,7 @@ def interpolate_pos_embed(pos_embed_checkpoint, visual_encoder):
         pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
         new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
         logger.info('reshape position embedding from %d to %d', orig_size ** 2, new_size ** 2)
-        
-        return new_pos_embed    
+
+        return new_pos_embed
     else:
         return pos_embed_checkpoint

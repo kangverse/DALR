@@ -1,20 +1,17 @@
-import math
-import copy
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from transformers.models.bert.modeling_bert import (
-    BertPreTrainedModel,
-    BertModel,
-)
-from transformers.models.roberta.modeling_roberta import (
-    RobertaPreTrainedModel,
-    RobertaModel,
-)
 from transformers.modeling_outputs import (
     BaseModelOutputWithPoolingAndCrossAttentions,
+)
+from transformers.models.bert.modeling_bert import (
+    BertModel,
+    BertPreTrainedModel,
+)
+from transformers.models.roberta.modeling_roberta import (
+    RobertaModel,
+    RobertaPreTrainedModel,
 )
 
 
@@ -65,14 +62,14 @@ class ArcSimilarity(nn.Module):
         self,
         x: torch.Tensor,
         y: torch.Tensor,
-        slabels: torch.Tensor = None, 
+        slabels: torch.Tensor = None,
     ) -> torch.Tensor:
         """
         x: [B, 1, D] or [B, D]
         y: [1, B, D] or [B, D]
         return: margin-adjusted cosine / temp
         """
-        cos_sim = self.cos(x, y).clamp(-1.0 + 1e-7, 1.0 - 1e-7) 
+        cos_sim = self.cos(x, y).clamp(-1.0 + 1e-7, 1.0 - 1e-7)
         theta = torch.acos(cos_sim)
         theta_m = theta - self.margin
         cos_m = torch.cos(theta_m)
@@ -423,7 +420,7 @@ class RobertaForCL(RobertaPreTrainedModel):
         output_hidden_states=None,
         return_dict=True,
     ):
-        
+
         input_ids = input_ids.view(-1, input_ids.size(-1))
         attention_mask = attention_mask.view(-1, attention_mask.size(-1))
         if token_type_ids is not None:
@@ -525,7 +522,7 @@ class ClipVisnModelAlignment(nn.Module):
         text_grounding: nn.Module,
         image_grounding: nn.Module,
     ):
-  
+
         self.vmlp = text_grounding
         self.tmlp = image_grounding
 
@@ -722,7 +719,7 @@ class DALR(nn.Module):
                 batch["token_type_ids"]
                 if "token_type_ids" in batch
                 else None
-            ), 
+            ),
             position_ids=(
                 batch["position_ids"]
                 if "position_ids" in batch
@@ -850,7 +847,7 @@ class DALR(nn.Module):
                 ) / self.args.tau2
                 teacher_text_features = z1T
             else:
-            
+
                 embeddings1, embeddings1_local = self.teacher_model_first.encode(
                     teacher_inputs, device=self.args.device
                 )
@@ -992,7 +989,7 @@ class DALR(nn.Module):
             z2.unsqueeze(1), z1.unsqueeze(0)
         )
 
-        
+
         v, _, _ = self.visn_model(
             batch["img"], batch["clip_text_feat"]
         )
