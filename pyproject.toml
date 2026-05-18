@@ -6,7 +6,9 @@ target-version = "py37"
 line-length = 120
 extend-exclude = [
     "SentEval",
-    "clip/bpe_simple_vocab_16e6.txt.gz",
+    "clip",                       # vendored from OpenAI CLIP
+    "src/xbert.py",               # vendored from HuggingFace transformers
+    "src/tokenization_bert.py",   # vendored from HuggingFace transformers
     "data",
     "figure",
     "Model",
