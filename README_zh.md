@@ -78,7 +78,7 @@ REPO ROOT
 │   ├── simcse/
 │   ├── DiffCSE/
 │   └── clip/
-│       └── ViT-L-14.pt
+│       └── ViT-B-32.pt
 ```
 
 **Wiki1M**（用于文本训练）：
@@ -95,7 +95,7 @@ cd SentEval/data/downstream/
 bash download_dataset.sh
 ```
 
-预训练模型（SimCSE、DiffCSE、BERT-base、CLIP ViT-L/14）可从 [Hugging Face](https://huggingface.co/) 下载，放入 `Model/` 目录。
+预训练模型（SimCSE、DiffCSE、BERT-base、CLIP ViT-B/32）可从 [Hugging Face](https://huggingface.co/) 下载，放入 `Model/` 目录。
 
 ---
 
@@ -172,7 +172,7 @@ bash scripts/run_wiki_coco.sh
 | `--per_device_train_batch_size` | 每设备批大小 | `128` |
 | `--num_train_epochs` | 训练轮数 | `4` |
 | `--lbd` | 蒸馏损失权重 | `0.01` |
-| `--margin1` / `--margin2` | 排序间距 | `0.18` |
+| `--margin1` / `--margin2` | 排序间距 | `0.2` |
 | `--distillation_loss` | 蒸馏损失类型 | `listmle` |
 | `--alpha_` / `--beta_` / `--gamma_` | 损失权重 | `0.33 / 1.0 / 1.0` |
 

@@ -78,7 +78,7 @@ REPO ROOT
 │   ├── simcse/
 │   ├── DiffCSE/
 │   └── clip/
-│       └── ViT-L-14.pt
+│       └── ViT-B-32.pt
 ```
 
 **Wiki1M** (used for text training):
@@ -95,7 +95,7 @@ cd SentEval/data/downstream/
 bash download_dataset.sh
 ```
 
-Pretrained models (SimCSE, DiffCSE, BERT-base, CLIP ViT-L/14) can be downloaded from [Hugging Face](https://huggingface.co/) and placed in the `Model/` directory.
+Pretrained models (SimCSE, DiffCSE, BERT-base, CLIP ViT-B/32) can be downloaded from [Hugging Face](https://huggingface.co/) and placed in the `Model/` directory.
 
 ---
 
@@ -172,7 +172,7 @@ You can freely adjust hyperparameters (learning rate, batch size, margins, lambd
 | `--per_device_train_batch_size` | Batch size per device | `128` |
 | `--num_train_epochs` | Number of training epochs | `4` |
 | `--lbd` | Weight for distillation loss | `0.01` |
-| `--margin1` / `--margin2` | Ranking margins | `0.18` |
+| `--margin1` / `--margin2` | Ranking margins | `0.2` |
 | `--distillation_loss` | Distillation loss type | `listmle` |
 | `--alpha_` / `--beta_` / `--gamma_` | Loss weights | `0.33 / 1.0 / 1.0` |
 

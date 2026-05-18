@@ -7,7 +7,7 @@ IMG=data/flickr30k_ViT_L14.json
 CAPTION=data/flickr_random_captions.txt
 TEXT=data/wiki1m_for_simcse.txt
 IMAGE_ROOT=data/flickr30k/flickr30k-images
-CLIP_MODEL=Model/clip/ViT-L-14.pt
+CLIP_MODEL=Model/clip/ViT-B-32.pt
 
 SEED=1
 MODEL=Model/bert-base-uncased
@@ -17,8 +17,8 @@ LR=2e-5
 BATCH=128
 EPS=4
 LBD=0.01
-MARGIN1=0.18
-MARGIN2=0.18
+MARGIN1=0.2
+MARGIN2=0.2
 SCORE_BASE=0.66
 
 OUT_DIR=result/mix_flickr/mse/${SEED}_
