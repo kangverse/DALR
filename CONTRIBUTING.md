@@ -8,8 +8,11 @@ Thank you for your interest in contributing to DALR! We welcome contributions of
 - [How to Contribute](#how-to-contribute)
 - [Development Setup](#development-setup)
 - [Code Style](#code-style)
+- [Commit Messages](#commit-messages)
 - [Submitting a Pull Request](#submitting-a-pull-request)
+- [Continuous Integration](#continuous-integration)
 - [Reporting Issues](#reporting-issues)
+- [Code of Conduct](#code-of-conduct)
 
 ---
 
@@ -44,27 +47,24 @@ We welcome the following types of contributions:
 ## Development Setup
 
 ```bash
-# Create and activate a virtual environment
+# 1. Create and activate a virtual environment
 python -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 
-# Install dependencies
+# 2. Install runtime dependencies
 pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 pip install -r requirements.txt
+
+# 3. Install developer tooling
+pip install ruff pre-commit
+
+# 4. Enable pre-commit hooks so lint runs on every commit
+pre-commit install
 ```
 
 Follow the [Getting Started](README.md#getting-started) section in the README to download the required datasets and pretrained models.
 
-### Pre-commit hooks (optional but recommended)
-
-Set up local pre-commit hooks so lint runs automatically before each commit:
-
-```bash
-pip install pre-commit
-pre-commit install
-```
-
-To run the full hook suite on the entire repository manually:
+To run the full hook suite manually on the whole repository:
 
 ```bash
 pre-commit run --all-files
@@ -75,11 +75,53 @@ pre-commit run --all-files
 ## Code Style
 
 - Follow [PEP 8](https://peps.python.org/pep-0008/) for Python code.
-- Lint is enforced via [Ruff](https://docs.astral.sh/ruff/) — configuration in `pyproject.toml`.
-- Use descriptive variable and function names.
+- Lint is enforced via [Ruff](https://docs.astral.sh/ruff/) — configuration lives in `pyproject.toml`.
+- Maximum line length is **120 characters** (matches the Ruff config).
+- Add type annotations to new public functions; they double as documentation.
 - Add docstrings to new public functions and classes.
 - Keep functions focused — prefer small, single-purpose functions.
 - Remove debugging code and unused imports before submitting.
+
+Run lint locally before pushing:
+
+```bash
+ruff check .
+```
+
+---
+
+## Commit Messages
+
+We loosely follow the [Conventional Commits](https://www.conventionalcommits.org/)
+style. A commit message starts with a *type* prefix, optionally a scope,
+and a short imperative summary:
+
+```
+<type>(<optional scope>): <summary>
+
+<optional body explaining the motivation>
+```
+
+Common types:
+
+| Type      | When to use |
+|-----------|---|
+| `feat`    | A new feature |
+| `fix`     | A bug fix |
+| `docs`    | Documentation only changes |
+| `style`   | Whitespace / formatting changes that do not affect behavior |
+| `refactor`| Code change that neither fixes a bug nor adds a feature |
+| `test`    | Adding or refactoring tests |
+| `chore`   | Build configuration, tooling, dependency updates |
+| `ci`      | Continuous integration changes |
+
+Examples:
+
+```
+fix(utils): avoid hardcoded 'cuda' in evaluate()
+docs(readme): add FAQ section
+ci: add GitHub Actions lint workflow
+```
 
 ---
 
@@ -109,6 +151,16 @@ PRs will be reviewed as promptly as possible. Please be patient and responsive t
 
 ---
 
+## Continuous Integration
+
+Every push and pull request triggers our [CI workflow](.github/workflows/ci.yml),
+which runs Ruff lint on the entire repository. A red CI job blocks the
+merge — please make sure `ruff check .` passes locally before pushing.
+The pre-commit hook configured in [Development Setup](#development-setup)
+catches almost all of these issues before they reach CI.
+
+---
+
 ## Reporting Issues
 
 When opening a bug report, please include:
@@ -123,4 +175,6 @@ When opening a bug report, please include:
 
 ## Code of Conduct
 
-Please be respectful and constructive in all interactions. We follow the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
+Please be respectful and constructive in all interactions. This project
+adopts the [Contributor Covenant](https://www.contributor-covenant.org/)
+v2.1 — see [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for the full text.
