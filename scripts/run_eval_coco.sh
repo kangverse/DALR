@@ -1,4 +1,4 @@
-export export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=1
 
 OUT_DIR=result/mix_coco/best/${SEED}/mse
 

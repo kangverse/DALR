@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Train models on wiki+flickr dataset.
+# Run STS evaluation on a model trained on wiki+flickr.
 # For SimCSE baseline, you just need to (1) set new output_dir (2) --framework simcse (3) remove --feature_file
-export export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=0
 # SEED=10
 
 # OUT_DIR=result/roberta/mix_flickr/${SEED}/mse
