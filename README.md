@@ -26,6 +26,7 @@ The figure below illustrates the overall model architecture.
 - [Quick Start: Use DALR](#quick-start-use-dalr)
 - [Evaluation](#evaluation)
 - [Train Your Own Models](#train-your-own-models)
+- [FAQ](#faq)
 - [Project Structure](#project-structure)
 - [Citation](#citation)
 - [Acknowledgements](#acknowledgements)
@@ -175,6 +176,61 @@ You can freely adjust hyperparameters (learning rate, batch size, margins, lambd
 | `--margin1` / `--margin2` | Ranking margins | `0.2` |
 | `--distillation_loss` | Distillation loss type | `listmle` |
 | `--alpha_` / `--beta_` / `--gamma_` | Loss weights | `0.33 / 1.0 / 1.0` |
+
+---
+
+## FAQ
+
+### Which CUDA / PyTorch versions are supported?
+
+DALR was developed and tested with **PyTorch 1.8.1 + CUDA 11.1**. Newer
+PyTorch versions are likely to work but are not officially tested —
+please open an Issue if you hit a regression.
+
+### What GPU was used in the paper?
+
+All experiments in the paper were run on a single **NVIDIA Tesla A100
+(80 GB)**. Lowering `--per_device_train_batch_size` and increasing
+gradient accumulation should let you reproduce training on smaller GPUs.
+
+### Can I run training or evaluation on CPU?
+
+Evaluation works on CPU: the `evaluate()` helper in `src/utils.py`
+infers the device from the model's parameters and falls back to CPU
+when CUDA is unavailable. Training, however, is GPU-only in practice —
+the model relies on CLIP plus a BERT/RoBERTa encoder and ranking
+distillation, which is prohibitively slow on CPU.
+
+### What's the difference between `--framework simcse` and `--framework mse`?
+
+- `simcse`: standard SimCSE contrastive objective only.
+- `mse` (default in our scripts): adds the DALR ranking distillation
+  loss on top of the contrastive objective — this is the setting
+  reported in the paper.
+
+### Which pretrained models do I need?
+
+- **CLIP ViT-B/32** — used as the *image teacher* in the paper.
+- **SimCSE** and **DiffCSE** — used as the two *text teachers*.
+- **BERT-base-uncased** (or **RoBERTa-base**) — the student language
+  model. Place them under `Model/` as shown in
+  [Download Datasets](#download-datasets).
+
+### Which hyperparameters most influence final performance?
+
+In our experiments the most sensitive knobs are:
+
+- `--lbd` — the weight of the ranking distillation loss
+- `--margin1` / `--margin2` — ranking margins (paper uses `0.2`)
+- `--learning_rate` — typical range `1e-5` to `2e-5`
+
+The defaults in `scripts/run_wiki_flickr.sh` and `scripts/run_wiki_coco.sh`
+correspond to the configurations reported in the paper.
+
+### How is the best checkpoint selected during training?
+
+The development set of STS-B is evaluated every 125 training steps and
+the best-performing checkpoint is retained.
 
 ---
 
