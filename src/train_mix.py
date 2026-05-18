@@ -21,7 +21,7 @@ from transformers import (
     set_seed,
 )
 
-from clip import *
+from clip import *  # noqa: F403  -- re-export of the vendored CLIP package
 from data import ImgSentDataset, get_transform
 from model_modified import DALR, BertForCL, ClipVisnModel, RobertaForCL
 from teachers import Teacher

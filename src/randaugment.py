@@ -302,7 +302,7 @@ arg_dict = {
 
 class RandomAugment:
 
-    def __init__(self, N=2, M=10, isPIL=False, augs=[]):
+    def __init__(self, N=2, M=10, isPIL=False, augs=None):
         self.N = N
         self.M = M
         self.isPIL = isPIL

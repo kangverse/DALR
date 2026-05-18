@@ -48,5 +48,4 @@ def evaluate(model, tokenizer):
 
 def inf_train_gen(trainloader):
     while True:
-        for batch in trainloader:
-            yield batch
+        yield from trainloader
