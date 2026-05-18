@@ -1,0 +1,38 @@
+[tool.ruff]
+# Project-wide Ruff configuration.
+# Docs: https://docs.astral.sh/ruff/
+
+target-version = "py37"
+line-length = 120
+extend-exclude = [
+    "SentEval",
+    "clip/bpe_simple_vocab_16e6.txt.gz",
+    "data",
+    "figure",
+    "Model",
+    "result",
+]
+
+[tool.ruff.lint]
+# Start with a conservative rule set so contributors are not blocked
+# by aggressive auto-fixes. We can expand this over time.
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+]
+ignore = [
+    "E501",  # line too long — covered by `line-length`, do not double-warn
+    "E741",  # ambiguous variable names (l, I, O) — common in ML code
+    "B008",  # do not perform function call in argument defaults — common in PyTorch
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # re-exports
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
