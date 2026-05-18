@@ -10,7 +10,15 @@ sys.path.insert(0, PATH_TO_SENTEVAL)
 import senteval
 
 
-def evaluate(model, tokenizer):
+def evaluate(model, tokenizer, device=None):
+    # Infer the model's device when not given, falling back to CPU so the
+    # script also runs on machines without CUDA.
+    if device is None:
+        try:
+            device = next(model.parameters()).device
+        except StopIteration:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     def prepare(params, samples):
         return
     def batcher(params, batch):
@@ -21,7 +29,7 @@ def evaluate(model, tokenizer):
             padding=True,
         )
         for k in batch:
-            batch[k] = batch[k].to('cuda')
+            batch[k] = batch[k].to(device)
         with torch.no_grad():
             outputs = model(**batch, output_hidden_states=True, return_dict=True)
         return outputs.last_hidden_state[:, 0].cpu() # unpooled [CLS] output in BERT
