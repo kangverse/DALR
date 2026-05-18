@@ -27,6 +27,7 @@ The figure below illustrates the overall model architecture.
 - [Evaluation](#evaluation)
 - [Train Your Own Models](#train-your-own-models)
 - [FAQ](#faq)
+- [Troubleshooting](#troubleshooting)
 - [Project Structure](#project-structure)
 - [Citation](#citation)
 - [Acknowledgements](#acknowledgements)
@@ -231,6 +232,67 @@ correspond to the configurations reported in the paper.
 
 The development set of STS-B is evaluated every 125 training steps and
 the best-performing checkpoint is retained.
+
+---
+
+## Troubleshooting
+
+### `ImportError: cannot import name 'X' from 'transformers'`
+
+You're likely on a newer `transformers` release than what DALR was
+developed against. Pin the version from `requirements.txt`:
+
+```bash
+pip install "transformers==4.8.2"
+```
+
+### `torch.cuda.OutOfMemoryError` during training
+
+Reduce the per-device batch size and increase gradient accumulation so
+the effective batch size stays the same. Edit
+`scripts/run_wiki_flickr.sh` / `scripts/run_wiki_coco.sh`:
+
+```bash
+BATCH=64            # or 32
+# and pass --gradient_accumulation_steps 2 (or 4) to the python call
+```
+
+### `FileNotFoundError: Model/clip/ViT-B-32.pt`
+
+The CLIP checkpoint was not downloaded into the expected location.
+Either let CLIP fetch it on first use (it will be cached under
+`~/.cache/clip/`) or download manually and place it at
+`Model/clip/ViT-B-32.pt` exactly as shown under
+[Download Datasets](#download-datasets).
+
+### `KeyError: 'STSBenchmark'` when running evaluation
+
+The SentEval downstream datasets are not in place. From the repo root:
+
+```bash
+cd SentEval/data/downstream/
+bash download_dataset.sh
+```
+
+### Training stalls at 0% or the very first step
+
+Almost always one of:
+
+- The image paths in the feature JSON (`--feature_file`) don't resolve
+  under `--image_root` — check both flags against your local layout.
+- The Wiki1M text file is missing or has zero lines.
+- CLIP failed to load and silently fell back; check the early logs.
+
+### Loss diverges or STS-B Spearman never improves
+
+Two settings to try first:
+
+- Lower the learning rate (`LR=1e-5` instead of `2e-5`).
+- Lower the distillation weight (`LBD=0.005`) or the ranking margins.
+
+If the model still does not improve after a few hundred steps, the
+text or image teacher likely failed to load — verify by printing a
+similarity matrix from each teacher on a few captions.
 
 ---
 
