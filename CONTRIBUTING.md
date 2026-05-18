@@ -55,11 +55,27 @@ pip install -r requirements.txt
 
 Follow the [Getting Started](README.md#getting-started) section in the README to download the required datasets and pretrained models.
 
+### Pre-commit hooks (optional but recommended)
+
+Set up local pre-commit hooks so lint runs automatically before each commit:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+To run the full hook suite on the entire repository manually:
+
+```bash
+pre-commit run --all-files
+```
+
 ---
 
 ## Code Style
 
 - Follow [PEP 8](https://peps.python.org/pep-0008/) for Python code.
+- Lint is enforced via [Ruff](https://docs.astral.sh/ruff/) — configuration in `pyproject.toml`.
 - Use descriptive variable and function names.
 - Add docstrings to new public functions and classes.
 - Keep functions focused — prefer small, single-purpose functions.
