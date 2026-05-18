@@ -1,0 +1,42 @@
+# This CITATION.cff file was generated to enable GitHub's "Cite this repository" feature.
+# Schema: https://citation-file-format.github.io/
+
+cff-version: 1.2.0
+message: "If you use this software or find our research useful, please cite the following paper."
+title: "DALR: Dual-level Alignment Learning for Multimodal Sentence Representation Learning"
+type: software
+authors:
+  - family-names: "He"
+    given-names: "Kang"
+  - family-names: "Ding"
+    given-names: "Yuzhe"
+  - family-names: "Wang"
+    given-names: "Haining"
+  - family-names: "Li"
+    given-names: "Fei"
+  - family-names: "Teng"
+    given-names: "Chong"
+  - family-names: "Ji"
+    given-names: "Donghong"
+repository-code: "https://github.com/kangverse/DALR"
+license: MIT
+preferred-citation:
+  type: conference-paper
+  title: "DALR: Dual-level Alignment Learning for Multimodal Sentence Representation Learning"
+  authors:
+    - family-names: "He"
+      given-names: "Kang"
+    - family-names: "Ding"
+      given-names: "Yuzhe"
+    - family-names: "Wang"
+      given-names: "Haining"
+    - family-names: "Li"
+      given-names: "Fei"
+    - family-names: "Teng"
+      given-names: "Chong"
+    - family-names: "Ji"
+      given-names: "Donghong"
+  collection-title: "Findings of the Association for Computational Linguistics: ACL 2025"
+  year: 2025
+  start: 3586
+  end: 3601
