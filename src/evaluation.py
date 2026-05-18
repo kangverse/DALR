@@ -1,9 +1,10 @@
-import sys
-import os
-import logging
 import argparse
-from prettytable import PrettyTable
+import logging
+import os
+import sys
+
 import torch
+from prettytable import PrettyTable
 from transformers import AutoModel, AutoTokenizer
 
 # Set PATHs
@@ -193,7 +194,7 @@ def main():
         scores = []
         aligns = []
         uniforms = []
-        
+
         for task in ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']:
             task_names.append(task)
             if task in results:
