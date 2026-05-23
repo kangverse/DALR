@@ -16,6 +16,11 @@ The figure below illustrates the overall model architecture.
 
 ![DALR model architecture](figure/model.png)
 
+### Paper Links
+
+- arXiv: https://arxiv.org/abs/2506.21096
+- ACL Anthology (Findings ACL 2025): https://aclanthology.org/2025.findings-acl.183/
+
 ---
 
 ## Table of Contents

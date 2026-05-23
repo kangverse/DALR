@@ -16,6 +16,11 @@
 
 ![DALR 模型架构](figure/model.png)
 
+### 论文链接
+
+- arXiv： https://arxiv.org/abs/2506.21096
+- ACL Anthology（Findings ACL 2025）： https://aclanthology.org/2025.findings-acl.183/
+
 ---
 
 ## 目录
