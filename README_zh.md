@@ -133,6 +133,27 @@ print("Cosine similarity between \"%s\" and \"%s\" is: %.3f" % (texts[0], texts[
 print("Cosine similarity between \"%s\" and \"%s\" is: %.3f" % (texts[0], texts[2], cosine_sim_0_2))
 ```
 
+### 工具功能：挖掘最相似句对
+
+`SimCSE` 新增了 `most_similar_pairs(...)`，用于在句子列表中快速找出
+最相似的句对：
+
+```python
+from src.tool import SimCSE
+
+simcse = SimCSE("Model/DALR")
+pairs = simcse.most_similar_pairs(
+    [
+        "A kid is skateboarding.",
+        "There is a child on a skateboard.",
+        "A cat is sleeping on the sofa.",
+    ],
+    top_k=2,
+)
+for sent_a, sent_b, score in pairs:
+    print(f"{score:.3f} | {sent_a} <> {sent_b}")
+```
+
 ---
 
 ## 评估

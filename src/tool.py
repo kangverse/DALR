@@ -240,6 +240,44 @@ class SimCSE:
             else:
                 return pack_single_result(distance[0], idx[0])
 
+    def most_similar_pairs(
+                self,
+                sentences: List[str],
+                top_k: int = 5,
+                device: str = None,
+                batch_size: int = 64,
+                max_length: int = 128) -> List[Tuple[str, str, float]]:
+
+        if top_k <= 0 or len(sentences) < 2:
+            return []
+
+        embeddings = self.encode(
+            sentences,
+            device=device,
+            return_numpy=True,
+            normalize_to_unit=True,
+            batch_size=batch_size,
+            max_length=max_length
+        )
+        similarity_matrix = np.matmul(embeddings, embeddings.T)
+        upper_i, upper_j = np.triu_indices(len(sentences), k=1)
+        pair_scores = similarity_matrix[upper_i, upper_j]
+
+        if pair_scores.size == 0:
+            return []
+
+        top_k = min(top_k, pair_scores.size)
+        if top_k == pair_scores.size:
+            top_indices = np.arange(pair_scores.size)
+        else:
+            top_indices = np.argpartition(-pair_scores, top_k - 1)[:top_k]
+        top_indices = top_indices[np.argsort(-pair_scores[top_indices])]
+
+        return [
+            (sentences[upper_i[idx]], sentences[upper_j[idx]], float(pair_scores[idx]))
+            for idx in top_indices
+        ]
+
 if __name__=="__main__":
     example_sentences = [
         'An animal is biting a persons finger.',
