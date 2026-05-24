@@ -168,6 +168,17 @@ python src/evaluation.py \
     --mode test
 ```
 
+如需导出便于实验记录与自动化处理的结果，可添加 `--output_json`：
+
+```bash
+python src/evaluation.py \
+    --model_name_or_path Model/DALR \
+    --pooler cls_before_pooler \
+    --task_set sts \
+    --mode test \
+    --output_json eval_results.json
+```
+
 `scripts/` 目录下还提供了其他评估脚本：
 
 ```bash
