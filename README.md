@@ -154,6 +154,28 @@ for sent_a, sent_b, score in pairs:
     print(f"{score:.3f} | {sent_a} <> {sent_b}")
 ```
 
+### Utility: Semantic Deduplication
+
+`SimCSE` also provides `semantic_deduplicate(...)` to cluster near-duplicate
+sentences by a cosine-similarity threshold:
+
+```python
+from src.tool import SimCSE
+
+simcse = SimCSE("Model/DALR")
+unique_sentences, duplicate_groups = simcse.semantic_deduplicate(
+    [
+        "A kid is skateboarding.",
+        "There is a child on a skateboard.",
+        "A cat is sleeping on the sofa.",
+        "A cat sleeps on a couch.",
+    ],
+    threshold=0.8,
+)
+print(unique_sentences)
+print(duplicate_groups)
+```
+
 ---
 
 ## Evaluation

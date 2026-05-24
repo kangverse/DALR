@@ -154,6 +154,28 @@ for sent_a, sent_b, score in pairs:
     print(f"{score:.3f} | {sent_a} <> {sent_b}")
 ```
 
+### 工具功能：语义去重
+
+`SimCSE` 还提供了 `semantic_deduplicate(...)`，可按余弦相似度阈值对
+近重复句子进行聚类与去重：
+
+```python
+from src.tool import SimCSE
+
+simcse = SimCSE("Model/DALR")
+unique_sentences, duplicate_groups = simcse.semantic_deduplicate(
+    [
+        "A kid is skateboarding.",
+        "There is a child on a skateboard.",
+        "A cat is sleeping on the sofa.",
+        "A cat sleeps on a couch.",
+    ],
+    threshold=0.8,
+)
+print(unique_sentences)
+print(duplicate_groups)
+```
+
 ---
 
 ## 评估

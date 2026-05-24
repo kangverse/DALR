@@ -278,6 +278,66 @@ class SimCSE:
             for idx in top_indices
         ]
 
+    def semantic_deduplicate(
+                self,
+                sentences: List[str],
+                threshold: float = 0.9,
+                device: str = None,
+                batch_size: int = 64,
+                max_length: int = 128) -> Tuple[List[str], List[List[Tuple[int, str]]]]:
+
+        if not sentences:
+            return [], []
+
+        if threshold > 1.0:
+            threshold = 1.0
+        if threshold < -1.0:
+            threshold = -1.0
+
+        embeddings = self.encode(
+            sentences,
+            device=device,
+            return_numpy=True,
+            normalize_to_unit=True,
+            batch_size=batch_size,
+            max_length=max_length
+        )
+        similarity_matrix = np.matmul(embeddings, embeddings.T)
+        n = len(sentences)
+        parent = list(range(n))
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        def union(a, b):
+            ra = find(a)
+            rb = find(b)
+            if ra != rb:
+                parent[rb] = ra
+
+        upper_i, upper_j = np.triu_indices(n, k=1)
+        similar_mask = similarity_matrix[upper_i, upper_j] >= threshold
+        for i, j in zip(upper_i[similar_mask], upper_j[similar_mask]):
+            union(int(i), int(j))
+
+        groups = {}
+        for idx in range(n):
+            root = find(idx)
+            groups.setdefault(root, []).append(idx)
+
+        unique_sentences = []
+        duplicate_groups = []
+        for indices in sorted(groups.values(), key=lambda x: x[0]):
+            indices = sorted(indices)
+            unique_sentences.append(sentences[indices[0]])
+            if len(indices) > 1:
+                duplicate_groups.append([(i, sentences[i]) for i in indices])
+
+        return unique_sentences, duplicate_groups
+
 if __name__=="__main__":
     example_sentences = [
         'An animal is biting a persons finger.',
