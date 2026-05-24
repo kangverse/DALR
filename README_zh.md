@@ -173,6 +173,8 @@ python src/evaluation.py \
 ```bash
 bash scripts/run_eval.sh        # STS 评估
 bash scripts/run_eval_coco.sh   # COCO 检索评估
+# 或显式指定 checkpoint 对应的 seed：
+SEED=1 bash scripts/run_eval_coco.sh
 ```
 
 ---
