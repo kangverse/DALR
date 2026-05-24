@@ -44,6 +44,10 @@ class SimCSE:
         else:
             self.pooler = "cls"
 
+    def _ensure_index_ready(self):
+        if self.index is None or "index" not in self.index or "sentences" not in self.index:
+            raise ValueError("Index is not built. Call `build_index(...)` or `load_index(...)` first.")
+
     def encode(self, sentence: Union[str, List[str]],
                 device: str = None,
                 return_numpy: bool = False,
@@ -179,6 +183,7 @@ class SimCSE:
     def add_to_index(self, sentences_or_file_path: Union[str, List[str]],
                         device: str = None,
                         batch_size: int = 64):
+        self._ensure_index_ready()
 
         # if the input sentence is a string, we assume it's the path of file that stores various sentences
         if isinstance(sentences_or_file_path, str):
@@ -199,12 +204,32 @@ class SimCSE:
         self.index["sentences"] += sentences_or_file_path
         logger.info("Finished")
 
+    def save_index(self, file_path: str):
+        self._ensure_index_ready()
+        if self.is_faiss_index:
+            raise NotImplementedError("Saving Faiss index is not supported yet. Build index with `use_faiss=False` before saving.")
+        np.savez_compressed(
+            file_path,
+            embeddings=self.index["index"].astype(np.float32),
+            sentences=np.array(self.index["sentences"], dtype=object),
+        )
+        logger.info("Saved retrieval index to %s", file_path)
+
+    def load_index(self, file_path: str):
+        with np.load(file_path, allow_pickle=True) as data:
+            embeddings = data["embeddings"]
+            sentences = data["sentences"].tolist()
+        self.index = {"index": embeddings, "sentences": sentences}
+        self.is_faiss_index = False
+        logger.info("Loaded retrieval index from %s", file_path)
+
 
 
     def search(self, queries: Union[str, List[str]],
                 device: str = None,
                 threshold: float = 0.6,
                 top_k: int = 5) -> Union[List[Tuple[str, float]], List[List[Tuple[str, float]]]]:
+        self._ensure_index_ready()
 
         if not self.is_faiss_index:
             if isinstance(queries, list):
