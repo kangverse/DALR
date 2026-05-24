@@ -133,6 +133,27 @@ print("Cosine similarity between \"%s\" and \"%s\" is: %.3f" % (texts[0], texts[
 print("Cosine similarity between \"%s\" and \"%s\" is: %.3f" % (texts[0], texts[2], cosine_sim_0_2))
 ```
 
+### Utility: Mine Similar Sentence Pairs
+
+`SimCSE` now provides `most_similar_pairs(...)` to find the most similar
+sentence pairs in a sentence list:
+
+```python
+from src.tool import SimCSE
+
+simcse = SimCSE("Model/DALR")
+pairs = simcse.most_similar_pairs(
+    [
+        "A kid is skateboarding.",
+        "There is a child on a skateboard.",
+        "A cat is sleeping on the sofa.",
+    ],
+    top_k=2,
+)
+for sent_a, sent_b, score in pairs:
+    print(f"{score:.3f} | {sent_a} <> {sent_b}")
+```
+
 ---
 
 ## Evaluation
