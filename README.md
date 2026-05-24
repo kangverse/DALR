@@ -184,6 +184,8 @@ Additional evaluation scripts are provided in `scripts/`:
 ```bash
 bash scripts/run_eval.sh        # STS evaluation
 bash scripts/run_eval_coco.sh   # COCO retrieval evaluation
+# or choose a specific checkpoint seed:
+SEED=1 bash scripts/run_eval_coco.sh
 ```
 
 ---
