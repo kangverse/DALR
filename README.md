@@ -168,6 +168,17 @@ python src/evaluation.py \
     --mode test
 ```
 
+To export machine-readable results for experiment tracking, pass `--output_json`:
+
+```bash
+python src/evaluation.py \
+    --model_name_or_path Model/DALR \
+    --pooler cls_before_pooler \
+    --task_set sts \
+    --mode test \
+    --output_json eval_results.json
+```
+
 Additional evaluation scripts are provided in `scripts/`:
 
 ```bash
