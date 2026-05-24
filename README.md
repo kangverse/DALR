@@ -204,6 +204,13 @@ bash scripts/run_wiki_flickr.sh
 bash scripts/run_wiki_coco.sh
 ```
 
+To avoid overwriting repeated runs, you can tag or override the output path:
+
+```bash
+RUN_TAG=exp1 bash scripts/run_wiki_flickr.sh
+OUT_DIR=result/custom/my_run bash scripts/run_wiki_coco.sh
+```
+
 You can freely adjust hyperparameters (learning rate, batch size, margins, lambda, etc.) in the respective shell scripts. Key arguments:
 
 | Argument | Description | Default |

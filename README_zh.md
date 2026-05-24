@@ -204,6 +204,13 @@ bash scripts/run_wiki_flickr.sh
 bash scripts/run_wiki_coco.sh
 ```
 
+为避免重复实验互相覆盖，你可以使用运行标签或直接覆盖输出目录：
+
+```bash
+RUN_TAG=exp1 bash scripts/run_wiki_flickr.sh
+OUT_DIR=result/custom/my_run bash scripts/run_wiki_coco.sh
+```
+
 你可以在对应的 shell 脚本中自由调整超参数（学习率、批大小、margin、lambda 等）。主要参数说明：
 
 | 参数 | 说明 | 默认值 |

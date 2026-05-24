@@ -2,15 +2,16 @@
 
 # Train models on wiki+coco dataset.
 # For SimCSE baseline, you just need to (1) set new output_dir (2) --framework simcse (3) remove --feature_file
+set -euo pipefail
 
-export CUDA_VISIBLE_DEVICES=0
-export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:32
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-max_split_size_mb:32}"
 
 IMG=data/train_coco_ViT_L14.json
 CAPTION=data/coco_random_captions.txt
 TEXT=data/wiki1m_for_simcse.txt
 
-SEED=1
+SEED="${SEED:-1}"
 MODEL=Model/bert-base-uncased
 FIRST_TEACHER_MODEL=Model/simcse
 SECOND_TEACHER_MODEL=Model/DiffCSE
@@ -22,8 +23,18 @@ MARGIN1=0.2
 MARGIN2=0.2
 SCORE_BASE=0.66
 
-OUT_DIR=result/mix_coco/best/${SEED}/mse
+BASE_OUT_DIR="result/mix_coco/best/${SEED}/mse"
+RUN_TAG="${RUN_TAG:-}"
+if [ -z "${OUT_DIR:-}" ]; then
+    if [ -n "$RUN_TAG" ]; then
+        OUT_DIR="${BASE_OUT_DIR}_${RUN_TAG}"
+    else
+        OUT_DIR="$BASE_OUT_DIR"
+    fi
+fi
 
+mkdir -p "$OUT_DIR"
+echo "Training output dir: $OUT_DIR"
 
 python src/train_mix.py \
     --framework mse \
@@ -48,5 +59,4 @@ python src/train_mix.py \
     --gamma_ 1.0 \
     --tau2 0.05 \
     --fp16 \
-
 
