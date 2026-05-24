@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import os
 import sys
@@ -33,6 +34,57 @@ def print_table(task_names, scores, logger):
     logger.info(tb)
 
 
+def build_json_summary(results, task_names, mode):
+    summary = {"mode": mode, "tasks": {}, "averages": {}}
+    sts_scores = []
+    transfer_scores = []
+
+    for task in task_names:
+        if task not in results:
+            continue
+        if mode == "dev":
+            if task in ["STSBenchmark", "SICKRelatedness"]:
+                score = float(results[task]["dev"]["spearman"][0] * 100)
+                summary["tasks"][task] = {"spearman_100": score}
+                sts_scores.append(score)
+            else:
+                score = float(results[task]["devacc"])
+                summary["tasks"][task] = {"devacc": score}
+                transfer_scores.append(score)
+        else:
+            if task in ["STS12", "STS13", "STS14", "STS15", "STS16"]:
+                score = float(results[task]["all"]["spearman"]["all"] * 100)
+                align = float(results[task]["all"]["spearman"]["align_loss"])
+                uniform = float(results[task]["all"]["spearman"]["uniform_loss"])
+                summary["tasks"][task] = {
+                    "spearman_100": score,
+                    "align_loss": align,
+                    "uniform_loss": uniform,
+                }
+                sts_scores.append(score)
+            elif task in ["STSBenchmark", "SICKRelatedness"]:
+                score = float(results[task]["test"]["spearman"].correlation * 100)
+                align = float(results[task]["test"]["align_loss"])
+                uniform = float(results[task]["test"]["uniform_loss"])
+                summary["tasks"][task] = {
+                    "spearman_100": score,
+                    "align_loss": align,
+                    "uniform_loss": uniform,
+                }
+                sts_scores.append(score)
+            else:
+                score = float(results[task]["devacc"])
+                summary["tasks"][task] = {"devacc": score}
+                transfer_scores.append(score)
+
+    if sts_scores:
+        summary["averages"]["sts_avg"] = float(sum(sts_scores) / len(sts_scores))
+    if transfer_scores:
+        summary["averages"]["transfer_avg"] = float(sum(transfer_scores) / len(transfer_scores))
+
+    return summary
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name_or_path", type=str,
@@ -54,6 +106,8 @@ def main():
                                  'MR', 'CR', 'MPQA', 'SUBJ', 'SST2', 'TREC', 'MRPC',
                                  'SICKRelatedness', 'STSBenchmark'],
                         help="Tasks to evaluate on. If '--task_set' is specified, this will be overridden")
+    parser.add_argument("--output_json", type=str, default=None,
+                        help="Optional path to save a machine-readable JSON summary")
 
     args = parser.parse_args()
 
@@ -226,6 +280,16 @@ def main():
         task_names.append("Avg.")
         scores.append("%.2f" % (sum([float(score) for score in scores]) / len(scores)))
         print_table(task_names, scores, logging)
+
+    if args.output_json is not None:
+        json_summary = build_json_summary(results, args.tasks, args.mode)
+        json_summary["task_set"] = args.task_set
+        json_summary["pooler"] = args.pooler
+        json_summary["model_name_or_path"] = args.model_name_or_path
+        with open(args.output_json, "w", encoding="utf-8") as f:
+            json.dump(json_summary, f, ensure_ascii=False, indent=2)
+        print(f"Saved JSON summary to {args.output_json}")
+        logging.info("Saved JSON summary to %s", args.output_json)
 
 
 if __name__ == "__main__":
