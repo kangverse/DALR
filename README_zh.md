@@ -154,6 +154,27 @@ for sent_a, sent_b, score in pairs:
     print(f"{score:.3f} | {sent_a} <> {sent_b}")
 ```
 
+### 工具功能：保存 / 加载检索索引
+
+你可以将暴力检索索引保存到磁盘，并在后续直接加载复用：
+
+```python
+from src.tool import SimCSE
+
+simcse = SimCSE("Model/DALR")
+sentences = [
+    "A kid is skateboarding.",
+    "There is a child on a skateboard.",
+    "A cat is sleeping on the sofa.",
+]
+simcse.build_index(sentences, use_faiss=False)
+simcse.save_index("dalr_index.npz")
+
+another = SimCSE("Model/DALR")
+another.load_index("dalr_index.npz")
+print(another.search("A child on a skateboard", top_k=2))
+```
+
 ---
 
 ## 评估
