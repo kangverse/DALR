@@ -154,6 +154,23 @@ for sent_a, sent_b, score in pairs:
     print(f"{score:.3f} | {sent_a} <> {sent_b}")
 ```
 
+### 工具功能：从查询文件批量检索
+
+你可以直接从文本文件批量执行检索（每行一个查询句）：
+
+```python
+from src.tool import SimCSE
+
+simcse = SimCSE("Model/DALR")
+simcse.build_index("data/coco_random_captions.txt", use_faiss=False)
+batch_results = simcse.search_from_file(
+    "data/flickr_random_captions.txt",
+    top_k=3,
+    threshold=0.5,
+)
+print(batch_results[0])  # 第一条查询对应的 top-3 结果
+```
+
 ---
 
 ## 评估

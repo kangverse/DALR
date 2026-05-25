@@ -44,6 +44,20 @@ class SimCSE:
         else:
             self.pooler = "cls"
 
+    def _load_sentences_from_file(self, file_path: str) -> List[str]:
+        sentences = []
+        with open(file_path, encoding="utf-8") as f:
+            logging.info("Loading sentences from %s ...", file_path)
+            for line in tqdm(f):
+                sentence = line.rstrip()
+                if sentence:
+                    sentences.append(sentence)
+        return sentences
+
+    def _ensure_index_ready(self):
+        if self.index is None or "index" not in self.index or "sentences" not in self.index:
+            raise ValueError("Index is not built. Call `build_index(...)` first.")
+
     def encode(self, sentence: Union[str, List[str]],
                 device: str = None,
                 return_numpy: bool = False,
@@ -132,14 +146,9 @@ class SimCSE:
                 logger.warning("Fail to import faiss. If you want to use faiss, install faiss through PyPI. Now the program continues with brute force search.")
                 use_faiss = False
 
-        # if the input sentence is a string, we assume it's the path of file that stores various sentences
+        # if the input is a string path, load one sentence per line
         if isinstance(sentences_or_file_path, str):
-            sentences = []
-            with open(sentences_or_file_path) as f:
-                logging.info("Loading sentences from %s ..." % (sentences_or_file_path))
-                for line in tqdm(f):
-                    sentences.append(line.rstrip())
-            sentences_or_file_path = sentences
+            sentences_or_file_path = self._load_sentences_from_file(sentences_or_file_path)
 
         logger.info("Encoding embeddings for sentences...")
         embeddings = self.encode(sentences_or_file_path, device=device, batch_size=batch_size, normalize_to_unit=True, return_numpy=True)
@@ -179,15 +188,11 @@ class SimCSE:
     def add_to_index(self, sentences_or_file_path: Union[str, List[str]],
                         device: str = None,
                         batch_size: int = 64):
+        self._ensure_index_ready()
 
-        # if the input sentence is a string, we assume it's the path of file that stores various sentences
+        # if the input is a string path, load one sentence per line
         if isinstance(sentences_or_file_path, str):
-            sentences = []
-            with open(sentences_or_file_path) as f:
-                logging.info("Loading sentences from %s ..." % (sentences_or_file_path))
-                for line in tqdm(f):
-                    sentences.append(line.rstrip())
-            sentences_or_file_path = sentences
+            sentences_or_file_path = self._load_sentences_from_file(sentences_or_file_path)
 
         logger.info("Encoding embeddings for sentences...")
         embeddings = self.encode(sentences_or_file_path, device=device, batch_size=batch_size, normalize_to_unit=True, return_numpy=True)
@@ -199,12 +204,33 @@ class SimCSE:
         self.index["sentences"] += sentences_or_file_path
         logger.info("Finished")
 
+    def search_from_file(
+                self,
+                query_file_path: str,
+                device: str = None,
+                threshold: float = 0.6,
+                top_k: int = 5) -> List[List[Tuple[str, float]]]:
+        self._ensure_index_ready()
+        queries = self._load_sentences_from_file(query_file_path)
+        if not queries:
+            return []
+        results = self.search(
+            queries=queries,
+            device=device,
+            threshold=threshold,
+            top_k=top_k,
+        )
+        if isinstance(results, list) and (not results or isinstance(results[0], list)):
+            return results
+        return [results]
+
 
 
     def search(self, queries: Union[str, List[str]],
                 device: str = None,
                 threshold: float = 0.6,
                 top_k: int = 5) -> Union[List[Tuple[str, float]], List[List[Tuple[str, float]]]]:
+        self._ensure_index_ready()
 
         if not self.is_faiss_index:
             if isinstance(queries, list):

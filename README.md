@@ -154,6 +154,24 @@ for sent_a, sent_b, score in pairs:
     print(f"{score:.3f} | {sent_a} <> {sent_b}")
 ```
 
+### Utility: Batch Search from Query File
+
+You can run retrieval for many queries at once from a text file
+(one query per line):
+
+```python
+from src.tool import SimCSE
+
+simcse = SimCSE("Model/DALR")
+simcse.build_index("data/coco_random_captions.txt", use_faiss=False)
+batch_results = simcse.search_from_file(
+    "data/flickr_random_captions.txt",
+    top_k=3,
+    threshold=0.5,
+)
+print(batch_results[0])  # top-3 results for the first query line
+```
+
 ---
 
 ## Evaluation
